@@ -1,1 +1,42 @@
-A plugin for AerosimRC simulator.
+===============================================================================
+            Plugin for connect CopterControl board to simulator.
+===============================================================================
+
+
+---------------------------------------
+        Building
+---------------------------------------
+
+a) download and install:
+    - Qt 4.8
+    - MinGW 4.4
+b) run:
+    qmake
+    mingw32-make
+
+
+---------------------------------------
+        Installing
+---------------------------------------
+
+a) Copy directory "CopterControl" to simulator's "Plugin" folder.
+b) Copy dep\*.dll to simulator's root folder.
+
+
+---------------------------------------
+        Configure plugin
+---------------------------------------
+
+CopterControl\cc_plugin.ini
+
+    host, port - hostname or IP address and port of target (server)
+
+
+
+---------------------------------------
+        Tools
+---------------------------------------
+
+udp_test utility can be used for test connection.
+
+	host, port - hostname or IP address of local computer
