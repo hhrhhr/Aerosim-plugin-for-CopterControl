@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>419</width>
     <height>400</height>
    </rect>
   </property>
@@ -21,6 +21,12 @@
     <layout class="QGridLayout" name="gridLayout">
      <item row="0" column="4">
       <widget class="QPushButton" name="btReciveStart">
+       <property name="minimumSize">
+        <size>
+         <width>60</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="text">
         <string notr="true">Connect</string>
        </property>
@@ -30,6 +36,18 @@
       <widget class="QLineEdit" name="simPort">
        <property name="enabled">
         <bool>true</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>50</width>
+         <height>0</height>
+        </size>
        </property>
        <property name="text">
         <string notr="true">12345</string>
@@ -44,8 +62,14 @@
        <property name="enabled">
         <bool>true</bool>
        </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
-        <string notr="true">localhost</string>
+        <string notr="true">127.0.0.1</string>
        </property>
       </widget>
      </item>
@@ -75,6 +99,12 @@
        <property name="enabled">
         <bool>false</bool>
        </property>
+       <property name="minimumSize">
+        <size>
+         <width>60</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="text">
         <string notr="true">Disconnect</string>
        </property>
@@ -82,8 +112,17 @@
      </item>
      <item row="1" column="1">
       <widget class="QLineEdit" name="localHost">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
-        <string notr="true">localhost</string>
+        <string notr="true">127.0.0.1</string>
        </property>
       </widget>
      </item>
@@ -96,6 +135,18 @@
      </item>
      <item row="1" column="3">
       <widget class="QLineEdit" name="localPort">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>50</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="text">
         <string notr="true">54321</string>
        </property>
@@ -106,6 +157,12 @@
      </item>
      <item row="1" column="4">
       <widget class="QPushButton" name="btTransmitStart">
+       <property name="minimumSize">
+        <size>
+         <width>60</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="text">
         <string notr="true">Transmit</string>
        </property>
@@ -115,6 +172,12 @@
       <widget class="QPushButton" name="btTransmitStop">
        <property name="enabled">
         <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>60</width>
+         <height>0</height>
+        </size>
        </property>
        <property name="text">
         <string notr="true">Stop</string>
@@ -151,14 +214,20 @@
             <string notr="true">read channels from simulator</string>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QRadioButton" name="sendCH">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
            <property name="text">
             <string notr="true">send channels to simulator</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -350,6 +419,9 @@
          </item>
          <item row="5" column="1">
           <widget class="QSlider" name="ch6">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
            <property name="minimum">
             <number>-511</number>
            </property>
@@ -521,12 +593,12 @@
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>256</x>
-     <y>108</y>
+     <x>294</x>
+     <y>146</y>
     </hint>
     <hint type="destinationlabel">
-     <x>362</x>
-     <y>115</y>
+     <x>378</x>
+     <y>146</y>
     </hint>
    </hints>
   </connection>
@@ -537,12 +609,12 @@
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>253</x>
-     <y>136</y>
+     <x>291</x>
+     <y>173</y>
     </hint>
     <hint type="destinationlabel">
-     <x>360</x>
-     <y>142</y>
+     <x>378</x>
+     <y>173</y>
     </hint>
    </hints>
   </connection>
@@ -553,12 +625,12 @@
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>210</x>
-     <y>170</y>
+     <x>248</x>
+     <y>200</y>
     </hint>
     <hint type="destinationlabel">
-     <x>361</x>
-     <y>173</y>
+     <x>378</x>
+     <y>200</y>
     </hint>
    </hints>
   </connection>
@@ -569,12 +641,12 @@
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>236</x>
-     <y>188</y>
+     <x>274</x>
+     <y>227</y>
     </hint>
     <hint type="destinationlabel">
-     <x>357</x>
-     <y>192</y>
+     <x>378</x>
+     <y>227</y>
     </hint>
    </hints>
   </connection>
@@ -585,12 +657,12 @@
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>259</x>
-     <y>221</y>
+     <x>297</x>
+     <y>254</y>
     </hint>
     <hint type="destinationlabel">
-     <x>362</x>
-     <y>222</y>
+     <x>378</x>
+     <y>254</y>
     </hint>
    </hints>
   </connection>
@@ -601,12 +673,12 @@
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>243</y>
+     <x>286</x>
+     <y>281</y>
     </hint>
     <hint type="destinationlabel">
-     <x>364</x>
-     <y>245</y>
+     <x>378</x>
+     <y>281</y>
     </hint>
    </hints>
   </connection>

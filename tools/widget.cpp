@@ -9,8 +9,6 @@ Widget::Widget(QWidget *parent) :
 
     inSocket = NULL;
     outSocket = NULL;
-    outHost = NULL;
-    outPort = NULL;
     screenTimeout.start();
 }
 
@@ -69,20 +67,27 @@ void Widget::on_btTransmitStart_clicked()
 {
     on_btTransmitStop_clicked();
 
-    outSocket = new QUdpSocket;
-    outHost = ui->simHost->text();
-    outPort = ui->simPort->text().toInt();
+    outSocket = new QUdpSocket();
+    outHost = ui->localHost->text();
+    outPort = ui->localPort->text().toInt();
 
     ui->listWidget->addItem("transmit started");
     ui->btTransmitStop->setEnabled(1);
     ui->localHost->setDisabled(1);
     ui->localPort->setDisabled(1);
     ui->btTransmitStart->setDisabled(1);
+
+    // one-shot connection
+//    sendDatagram();
 }
 
 void Widget::on_btTransmitStop_clicked()
 {
-    ui->listWidget->addItem("transmit stopped");
+    if(outSocket) {
+        delete outSocket;
+        outSocket = NULL;
+        ui->listWidget->addItem("transmit stopped");
+    }
     ui->btTransmitStart->setEnabled(1);
     ui->localHost->setEnabled(1);
     ui->localPort->setEnabled(1);
@@ -102,7 +107,7 @@ void Widget::readDatagram()
 
         processDatagram(datagram);
         if(outSocket)
-            writeDatagram();
+            sendDatagram();
     }
 }
 
@@ -116,37 +121,35 @@ void Widget::processDatagram(const QByteArray &data)
     // check magic header
     quint32 magic;
     stream >> magic;
-    if (magic != 0x4153494D) {  // "AERO"
-        qDebug() << magic;
-        return;
-    }
+    if (magic == 0x4153494D) {  // "AERO"
+        qreal homeX, homeY, homeZ;
+        qreal WpHX, WpHY, WpLat, WpLon;
+        qreal posX, posY, posZ;
+        qreal velX, velY, velZ;
+        qreal angX, angY, angZ;
+        qreal accX, accY, accZ;
+        qreal lat, lon;
+        qreal alt;
+        qreal head, pitch, roll;
+        qreal volt, curr;
 
-    qreal homeX, homeY, homeZ;
-    qreal WpHX, WpHY, WpLat, WpLon;
-    qreal posX, posY, posZ;
-    qreal velX, velY, velZ;
-    qreal angX, angY, angZ;
-    qreal accX, accY, accZ;
-    qreal lat, lon;
-    qreal alt;
-    qreal head, pitch, roll;
-    qreal volt, curr;
+        stream >> homeX >> homeY >> homeZ;
+        stream >> WpHX >> WpHY >> WpLat >> WpLon;
+        stream >> posX >> posY >> posZ;
+        stream >> velX >> velY >> velZ;
+        stream >> angX >> angY >> angZ;
+        stream >> accX >> accY >> accZ;
+        stream >> lat >> lon;
+        stream >> alt;
+        stream >> head >> pitch >> roll;
+        stream >> volt >> curr;
 
-    stream >> homeX >> homeY >> homeZ;
-    stream >> WpHX >> WpHY >> WpLat >> WpLon;
-    stream >> posX >> posY >> posZ;
-    stream >> velX >> velY >> velZ;
-    stream >> angX >> angY >> angZ;
-    stream >> accX >> accY >> accZ;
-    stream >> lat >> lon;
-    stream >> alt;
-    stream >> head >> pitch >> roll;
-    stream >> volt >> curr;
+        if(ui->tabWidget->currentIndex() != 0)
+            return;
 
-    if(ui->tabWidget->currentIndex() != 0)
-        return;
+        if (screenTimeout.elapsed() < 200)
+            return;
 
-    if (screenTimeout.elapsed() >= 200) {
         ui->listWidget->clear();
         ui->listWidget->addItem("home location (m)");
         ui->listWidget->addItem(QString::number(homeX) + "\t" +
@@ -188,16 +191,46 @@ void Widget::processDatagram(const QByteArray &data)
         ui->listWidget->addItem(QString::number(data.size()));
 
         screenTimeout.restart();
-//        static int qqq = 0;
-//        qDebug() << "update " << ++qqq;
+
+    } else if(magic == 0x52434D44) { // "RCMD"
+        qreal ch1, ch2, ch3, ch4, ch5, ch6;
+        stream >> ch1 >> ch2 >> ch3 >> ch4 >> ch5 >> ch6;
+
+        if(ui->sendCH->isChecked())
+            return;
+
+        if (screenTimeout.elapsed() < 200)
+            return;
+
+        ui->listWidget->clear();
+
+        if(ui->tabWidget->currentIndex() == 0) {
+            ui->listWidget->addItem("channels");
+            ui->listWidget->addItem("CH1: " + QString::number(ch1));
+            ui->listWidget->addItem("CH2: " + QString::number(ch2));
+            ui->listWidget->addItem("CH3: " + QString::number(ch3));
+            ui->listWidget->addItem("CH4: " + QString::number(ch4));
+            ui->listWidget->addItem("CH5: " + QString::number(ch5));
+            ui->listWidget->addItem("CH6: " + QString::number(ch6));
+        } else if(ui->tabWidget->currentIndex() == 1) {
+            ui->ch1->setValue(int(ch1 * 512));
+            ui->ch2->setValue(int(ch2 * 512));
+            ui->ch3->setValue(int(ch3 * 512));
+            ui->ch4->setValue(int(ch4 * 512));
+            ui->ch5->setValue(int(ch5 * 512));
+            ui->ch6->setValue(int(ch6 * 512));
+        }
+
+        screenTimeout.restart();
+    } else {
+        qDebug() << "unknown magic:" << magic;
     }
 }
 
-void Widget::writeDatagram()
+void Widget::sendDatagram()
 {
-    QByteArray data;
-    data.resize(52);
-    QDataStream stream(&data, QIODevice::WriteOnly);
+    if(ui->readCH->isChecked())
+        return;
 
     qreal ch1, ch2, ch3, ch4, ch5, ch6;
     qreal coef = 1.0 / 512.0;
@@ -209,12 +242,17 @@ void Widget::writeDatagram()
     ch5 = ui->ch5->value() * coef;
     ch6 = ui->ch6->value() * coef;
 
+    QByteArray data;
+    data.resize(52);
+    QDataStream stream(&data, QIODevice::WriteOnly);
     // magic header, "RCMD"
     stream << quint32(0x52434D44);
     // send channels
     stream << ch1 << ch2 << ch3 << ch4 << ch5 << ch6;
 
-//    qDebug() << data.size();
-    if(outSocket->writeDatagram(data, outHost, outPort) == -1)
-        qDebug() << outSocket->errorString();
+    if(outSocket->writeDatagram(data, outHost, outPort) == -1) {
+        qDebug() << "outHost" << outHost << " "
+                 << "outPort " << outPort << " "
+                 << outSocket->errorString();
+    }
 }

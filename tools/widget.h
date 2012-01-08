@@ -33,10 +33,10 @@ private:
     QUdpSocket *inSocket;
     QUdpSocket *outSocket;
     QHostAddress outHost;
-    int outPort;
+    quint16 outPort;
 
     void processDatagram(const QByteArray &data);
-    void writeDatagram();
+    void sendDatagram();
 };
 
 #endif // WIDGET_H
