@@ -101,7 +101,8 @@ void Widget::readDatagram()
         Q_UNUSED(datagramSize);
 
         processDatagram(datagram);
-        writeDatagram();
+        if(outSocket)
+            writeDatagram();
     }
 }
 
@@ -141,6 +142,9 @@ void Widget::processDatagram(const QByteArray &data)
     stream >> alt;
     stream >> head >> pitch >> roll;
     stream >> volt >> curr;
+
+    if(ui->tabWidget->currentIndex() != 0)
+        return;
 
     if (screenTimeout.elapsed() >= 200) {
         ui->listWidget->clear();
@@ -184,17 +188,33 @@ void Widget::processDatagram(const QByteArray &data)
         ui->listWidget->addItem(QString::number(data.size()));
 
         screenTimeout.restart();
+//        static int qqq = 0;
+//        qDebug() << "update " << ++qqq;
     }
 }
 
 void Widget::writeDatagram()
 {
     QByteArray data;
-    data.resize(4);
+    data.resize(52);
     QDataStream stream(&data, QIODevice::WriteOnly);
+
+    qreal ch1, ch2, ch3, ch4, ch5, ch6;
+    qreal coef = 1.0 / 512.0;
+
+    ch1 = ui->ch1->value() * coef;
+    ch2 = ui->ch2->value() * coef;
+    ch3 = ui->ch3->value() * coef;
+    ch4 = ui->ch4->value() * coef;
+    ch5 = ui->ch5->value() * coef;
+    ch6 = ui->ch6->value() * coef;
+
     // magic header, "RCMD"
     stream << quint32(0x52434D44);
+    // send channels
+    stream << ch1 << ch2 << ch3 << ch4 << ch5 << ch6;
 
+//    qDebug() << data.size();
     if(outSocket->writeDatagram(data, outHost, outPort) == -1)
         qDebug() << outSocket->errorString();
 }
