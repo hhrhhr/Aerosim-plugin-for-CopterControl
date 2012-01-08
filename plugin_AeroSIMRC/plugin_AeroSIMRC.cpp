@@ -25,10 +25,11 @@ char g_strOutputFolder[MAX_PATH];
 // Qt variable begin
 QTime blueLedTimer;
 int blueLedTimeout = 1000;
+QUdpSocket *inSocket = NULL;
 QUdpSocket *outSocket = NULL;
-QHostAddress host;
-int port;
-//QFile dbglog;
+QHostAddress outHost;
+int outPort;
+QFile dbglog;
 // Qt variable end
 
 // This function is already written for you. No need to modify it.
@@ -54,21 +55,60 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(TPluginInit *ptPluginInit)
 
     // Qt code begin
     {
-        blueLedTimer.start();
-        outSocket = new QUdpSocket();
+//        dbglog.setParent(this);
+        dbglog.setFileName(QString(g_strOutputFolder) + "/dbglog.txt");
+        if (!dbglog.open(QIODevice::WriteOnly | QIODevice::Text))
+            return;
 
+        blueLedTimer.start();
+
+        outSocket = new QUdpSocket();
         QSettings settings(QString(g_strPluginFolder) + "/cc_plugin.ini", QSettings::IniFormat);
-        host = settings.value("host").toString();
-        port = settings.value("port").toInt();
+        outHost = settings.value("remote_host").toString();
+        outPort = settings.value("remote_port").toInt();
+
+        inSocket = new QUdpSocket();
+        QString inHost = settings.value("local_host").toString();
+        quint16 inPort = settings.value("local_port").toInt();
+        if(!inSocket->bind(QHostAddress(inHost), inPort)) {
+            QTextStream out(&dbglog);
+            out << "local_host: " << inHost
+                << " local_port: " << QString::number(inPort)
+                << " socket error: " << inSocket->errorString() << "\n";
+        }
+//        Q_OBJECT_FAKE
+//        connect(inSocket, SIGNAL(readyRead()), this, SLOT(readDatagram()), Qt::DirectConnection);
+
     }
     // Qt code end
 }
 
 
 //-----------------------------------------------------------------------------
+void readDatagram()
+{
+    while (inSocket->hasPendingDatagrams()) {
+        QByteArray datagram;
+        datagram.resize(inSocket->pendingDatagramSize());
+        QHostAddress sender;
+        quint16 senderPort;
+        quint64 datagramSize;
+        datagramSize = inSocket->readDatagram(datagram.data(), datagram.size(),
+                                               &sender, &senderPort);
+
+//        processDatagram(datagram);
+        sprintf(g_strDebugInfo + strlen(g_strDebugInfo), "\ndatagram size: %d", int(datagramSize));
+    }
+}
+
+void processDatagram(const QByteArray &data)
+{
+    sprintf(g_strDebugInfo + strlen(g_strDebugInfo), "\ndatagram size: %d", data.size());
+}
+
 
 void Run_Command_Reset(const TDataFromAeroSimRC *ptDataFromAeroSimRC,
-                             TDataToAeroSimRC   *ptDataToAeroSimRC)
+                       TDataToAeroSimRC   *ptDataToAeroSimRC)
 {
     // Uncheck menu CheckBoxes
     ptDataToAeroSimRC->Menu_nFlags_MenuItem_New_CheckBox_Status &= (0xFFFFFFFF ^ MASK_MENU_ITEM__ENABLE);
@@ -105,7 +145,7 @@ void Run_Command_Reset(const TDataFromAeroSimRC *ptDataFromAeroSimRC,
 }
 
 void Run_BlinkLEDs(const TDataFromAeroSimRC *ptDataFromAeroSimRC,
-                         TDataToAeroSimRC   *ptDataToAeroSimRC,
+                   TDataToAeroSimRC   *ptDataToAeroSimRC,
                    bool &isEnable)
 {
     Q_UNUSED(ptDataFromAeroSimRC);
@@ -120,7 +160,6 @@ void Run_BlinkLEDs(const TDataFromAeroSimRC *ptDataFromAeroSimRC,
         ptDataToAeroSimRC->Menu_nFlags_MenuItem_New_CheckBox_Status &= !MASK_MENU_ITEM__LED_GREEN;
     }
 }
-
 
 /******************************************************************************
  * The string returned in pucOnScreenDebugInfoText will be displayed in AeroSIMRC
@@ -232,7 +271,7 @@ void InfoText(const TDataFromAeroSimRC *ptDataFromAeroSimRC, TDataToAeroSimRC *p
  * This function is called at each program cycle from AeroSIM RC
  ******************************************************************************/
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAeroSimRC,
-                                               TDataToAeroSimRC   *ptDataToAeroSimRC)
+                                         TDataToAeroSimRC   *ptDataToAeroSimRC)
 {
     // debug info is shown on the screen
     ptDataToAeroSimRC->Debug_pucOnScreenInfoText = g_strDebugInfo;
@@ -246,7 +285,7 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAer
     bool bCommand_Reset = (ptDataFromAeroSimRC->Menu_nFlags_MenuItem_Status & MASK_MENU_ITEM__COMMAND_RESET) != 0;
     bool isEnable = (ptDataFromAeroSimRC->Menu_nFlags_MenuItem_Status & MASK_MENU_ITEM__ENABLE) != 0;
     bool isTxEnable = (ptDataFromAeroSimRC->Menu_nFlags_MenuItem_Status & MASK_MENU_ITEM__TX) != 0;
-//    bool isRxEnable = (ptDataFromAeroSimRC->Menu_nFlags_MenuItem_Status & MASK_MENU_ITEM__RX) != 0;
+    bool isRxEnable = (ptDataFromAeroSimRC->Menu_nFlags_MenuItem_Status & MASK_MENU_ITEM__RX) != 0;
 
     // Run commands
     if(bCommand_Reset) {
@@ -254,8 +293,9 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAer
     } else {
         Run_BlinkLEDs(ptDataFromAeroSimRC, ptDataToAeroSimRC, isEnable);
 
-        // send data
+        // network
         if (isEnable) {
+            // send data
             if (isTxEnable) {
                 QByteArray data;
                 // 220 - current size of datagram, change it if recieved data is changed!!!
@@ -301,12 +341,17 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAer
                 stream << qreal(ptDataFromAeroSimRC->Model_fBatteryCurrent);
 
                 // send data
-                if(outSocket->writeDatagram(data, host, port) == -1) {
-//                    QTextStream out(&dbglog);
-//                    out << "host: " << host.toString()
-//                        << "port: " << QString::number(port)
-//                        << "socket error: " << outSocket->errorString() << "\n";
+                if(outSocket->writeDatagram(data, outHost, outPort) == -1) {
+                    QTextStream out(&dbglog);
+                    out << "host: " << outHost.toString()
+                        << " port: " << QString::number(outPort)
+                        << " socket error: " << outSocket->errorString() << "\n";
                 }
+            }
+            // recive data
+            if(isRxEnable) {
+                if(inSocket->hasPendingDatagrams())
+                    readDatagram();
             }
         }
     }
@@ -319,9 +364,13 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAer
  ******************************************************************************/
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Close()
 {
-    if (outSocket) {
+    if(outSocket) {
         delete outSocket;
         outSocket = NULL;
+    }
+    if(inSocket) {
+        delete inSocket;
+        inSocket = NULL;
     }
     // delete other used resources
 }
