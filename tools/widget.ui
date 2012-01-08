@@ -13,38 +13,21 @@
   <property name="windowTitle">
    <string>Widget</string>
   </property>
+  <property name="windowFilePath">
+   <string notr="true"/>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <property name="margin">
-      <number>6</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="label">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="4">
+      <widget class="QPushButton" name="btReciveStart">
        <property name="text">
-        <string>host:</string>
+        <string notr="true">Connect</string>
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QLineEdit" name="host">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string notr="true">localhost</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>port:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="port">
+     <item row="0" column="3">
+      <widget class="QLineEdit" name="simPort">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -56,20 +39,85 @@
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QPushButton" name="btConnect">
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="simHost">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <property name="text">
-        <string>Connect</string>
+        <string notr="true">localhost</string>
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QPushButton" name="btDisconnect">
+     <item row="1" column="0">
+      <widget class="QLabel" name="lbLocalHost">
+       <property name="text">
+        <string notr="true">local host</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="lbSimHost">
+       <property name="text">
+        <string notr="true">sim host:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="lbSimPort">
+       <property name="text">
+        <string notr="true">sim port:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="5">
+      <widget class="QPushButton" name="btReciveStop">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="text">
-        <string>Disconnect</string>
+        <string notr="true">Disconnect</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="localHost">
+       <property name="text">
+        <string notr="true">localhost</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLabel" name="lbLocalPort">
+       <property name="text">
+        <string notr="true">local port</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QLineEdit" name="localPort">
+       <property name="text">
+        <string notr="true">54321</string>
+       </property>
+       <property name="maxLength">
+        <number>5</number>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <widget class="QPushButton" name="btTransmitStart">
+       <property name="text">
+        <string notr="true">Transmit</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="5">
+      <widget class="QPushButton" name="btTransmitStop">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string notr="true">Stop</string>
        </property>
       </widget>
      </item>

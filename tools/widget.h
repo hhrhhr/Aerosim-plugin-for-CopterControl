@@ -19,18 +19,24 @@ public:
     ~Widget();
     
 private slots:
-    void on_btConnect_clicked();
-    void on_btDisconnect_clicked();
+    void on_btReciveStart_clicked();
+    void on_btReciveStop_clicked();
+    void on_btTransmitStart_clicked();
+    void on_btTransmitStop_clicked();
 
     void readDatagram();
-    void processDatagram(const QByteArray &data);
 
 private:
     Ui::Widget *ui;
 
-    QUdpSocket *inSocket;
     QTime screenTimeout;
+    QUdpSocket *inSocket;
+    QUdpSocket *outSocket;
+    QHostAddress outHost;
+    int outPort;
 
+    void processDatagram(const QByteArray &data);
+    void writeDatagram();
 };
 
 #endif // WIDGET_H
