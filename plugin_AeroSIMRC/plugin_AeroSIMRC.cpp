@@ -28,8 +28,9 @@ int blueLedTimeout = 1000;
 QUdpSocket *inSocket = NULL;
 QUdpSocket *outSocket = NULL;
 QHostAddress outHost;
-int outPort;
+quint16 outPort;
 QFile dbglog;
+qreal channel[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 // Qt variable end
 
 // This function is already written for you. No need to modify it.
@@ -55,7 +56,6 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(TPluginInit *ptPluginInit)
 
     // Qt code begin
     {
-//        dbglog.setParent(this);
         dbglog.setFileName(QString(g_strOutputFolder) + "/dbglog.txt");
         if (!dbglog.open(QIODevice::WriteOnly | QIODevice::Text))
             return;
@@ -76,15 +76,19 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(TPluginInit *ptPluginInit)
                 << " local_port: " << QString::number(inPort)
                 << " socket error: " << inSocket->errorString() << "\n";
         }
-//        Q_OBJECT_FAKE
-//        connect(inSocket, SIGNAL(readyRead()), this, SLOT(readDatagram()), Qt::DirectConnection);
-
     }
     // Qt code end
 }
 
 
 //-----------------------------------------------------------------------------
+
+void processDatagram(const QByteArray &data)
+{
+//    sprintf(g_strDebugInfo + strlen(g_strDebugInfo), "\n222: %d", data.size());
+
+}
+
 void readDatagram()
 {
     while (inSocket->hasPendingDatagrams()) {
@@ -95,17 +99,25 @@ void readDatagram()
         quint64 datagramSize;
         datagramSize = inSocket->readDatagram(datagram.data(), datagram.size(),
                                                &sender, &senderPort);
-
 //        processDatagram(datagram);
-        sprintf(g_strDebugInfo + strlen(g_strDebugInfo), "\ndatagram size: %d", int(datagramSize));
+        QDataStream stream(&datagram, QIODevice::ReadOnly);
+//        stream.setFloatingPointPrecision();
+        // check magic header
+        quint32 magic;
+        stream >> magic;
+        if (magic == 0x52434D44) {  // "RCMD"
+            sprintf(g_strDebugInfo + strlen(g_strDebugInfo), "magic ok\n");
+            stream >> channel[CH_AILERON];
+            stream >> channel[CH_ELEVATOR];
+            stream >> channel[CH_THROTTLE];
+            stream >> channel[CH_RUDDER];
+            stream >> channel[CH_5];
+            stream >> channel[CH_6];
+        } else {
+            sprintf(g_strDebugInfo + strlen(g_strDebugInfo), "wrong magic\n");
+        }
     }
 }
-
-void processDatagram(const QByteArray &data)
-{
-    sprintf(g_strDebugInfo + strlen(g_strDebugInfo), "\ndatagram size: %d", data.size());
-}
-
 
 void Run_Command_Reset(const TDataFromAeroSimRC *ptDataFromAeroSimRC,
                        TDataToAeroSimRC   *ptDataToAeroSimRC)
@@ -186,15 +198,17 @@ void InfoText(const TDataFromAeroSimRC *ptDataFromAeroSimRC, TDataToAeroSimRC *p
             "\n"
             "fHeading = % 6.4f   fPitch = % 6.4f   fRoll = % 6.4f\n"
             "\n"
-            "TX Aileron   = % 4.2f    RX Aileron   = % 4.2f\n"
-            "TX Elevator  = % 4.2f    RX Elevator  = % 4.2f\n"
-            "TX Throttle  = % 4.2f    RX Throttle  = % 4.2f\n"
-            "TX Rudder    = % 4.2f    RX Rudder    = % 4.2f\n"
-            "TX Channel5  = % 4.2f    RX Channel5  = % 4.2f\n"
-            "TX Channel6  = % 4.2f    RX Channel6  = % 4.2f\n"
-            "TX Channel7  = % 4.2f    RX Channel7  = % 4.2f\n"
-            "TX PluginCh1 = % 4.2f    RX PluginCh1 = % 4.2f\n"
-            "TX PluginCh2 = % 4.2f    RX PluginCh2 = % 4.2f\n"
+            "Aileron   TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
+            "Elevator  TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
+            "Throttle  TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
+            "Rudder    TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
+            "Channel5  TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
+            "Channel6  TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
+            "Channel7  TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
+            "PluginCh1 TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
+            "PluginCh2 TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
+            "FPVCamPan TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
+            "FPVCamTil TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
             "\n"
             "MenuItems = %lu\n"
             "\n"
@@ -234,15 +248,28 @@ void InfoText(const TDataFromAeroSimRC *ptDataFromAeroSimRC, TDataToAeroSimRC *p
 
             ptDataFromAeroSimRC->Model_fHeading, ptDataFromAeroSimRC->Model_fPitch, ptDataFromAeroSimRC->Model_fRoll,
 
-            ptDataFromAeroSimRC->Channel_afValue_TX[CH_AILERON ],  ptDataFromAeroSimRC->Channel_afValue_RX[CH_AILERON ],
-            ptDataFromAeroSimRC->Channel_afValue_TX[CH_ELEVATOR],  ptDataFromAeroSimRC->Channel_afValue_RX[CH_ELEVATOR],
-            ptDataFromAeroSimRC->Channel_afValue_TX[CH_THROTTLE],  ptDataFromAeroSimRC->Channel_afValue_RX[CH_THROTTLE],
-            ptDataFromAeroSimRC->Channel_afValue_TX[CH_RUDDER  ],  ptDataFromAeroSimRC->Channel_afValue_RX[CH_RUDDER  ],
-            ptDataFromAeroSimRC->Channel_afValue_TX[CH_5       ],  ptDataFromAeroSimRC->Channel_afValue_RX[CH_5       ],
-            ptDataFromAeroSimRC->Channel_afValue_TX[CH_6       ],  ptDataFromAeroSimRC->Channel_afValue_RX[CH_6       ],
-            ptDataFromAeroSimRC->Channel_afValue_TX[CH_7       ],  ptDataFromAeroSimRC->Channel_afValue_RX[CH_7       ],
-            ptDataFromAeroSimRC->Channel_afValue_TX[CH_PLUGIN_1],  ptDataFromAeroSimRC->Channel_afValue_RX[CH_PLUGIN_1],
-            ptDataFromAeroSimRC->Channel_afValue_TX[CH_PLUGIN_2],  ptDataFromAeroSimRC->Channel_afValue_RX[CH_PLUGIN_2],
+            ptDataFromAeroSimRC->Channel_afValue_TX[  CH_AILERON ],  ptDataFromAeroSimRC->Channel_afValue_RX[  CH_AILERON ],
+            ptDataToAeroSimRC->Channel_afNewValue_TX[ CH_AILERON ],  ptDataToAeroSimRC->Channel_afNewValue_RX[ CH_AILERON ],
+            ptDataFromAeroSimRC->Channel_afValue_TX[  CH_ELEVATOR],  ptDataFromAeroSimRC->Channel_afValue_RX[  CH_ELEVATOR],
+            ptDataToAeroSimRC->Channel_afNewValue_TX[ CH_ELEVATOR],  ptDataToAeroSimRC->Channel_afNewValue_RX[ CH_ELEVATOR],
+            ptDataFromAeroSimRC->Channel_afValue_TX[  CH_THROTTLE],  ptDataFromAeroSimRC->Channel_afValue_RX[  CH_THROTTLE],
+            ptDataToAeroSimRC->Channel_afNewValue_TX[ CH_THROTTLE],  ptDataToAeroSimRC->Channel_afNewValue_RX[ CH_THROTTLE],
+            ptDataFromAeroSimRC->Channel_afValue_TX[  CH_RUDDER  ],  ptDataFromAeroSimRC->Channel_afValue_RX[  CH_RUDDER  ],
+            ptDataToAeroSimRC->Channel_afNewValue_TX[ CH_RUDDER  ],  ptDataToAeroSimRC->Channel_afNewValue_RX[ CH_RUDDER  ],
+            ptDataFromAeroSimRC->Channel_afValue_TX[  CH_5       ],  ptDataFromAeroSimRC->Channel_afValue_RX[  CH_5       ],
+            ptDataToAeroSimRC->Channel_afNewValue_TX[ CH_5       ],  ptDataToAeroSimRC->Channel_afNewValue_RX[ CH_5       ],
+            ptDataFromAeroSimRC->Channel_afValue_TX[  CH_6       ],  ptDataFromAeroSimRC->Channel_afValue_RX[  CH_6       ],
+            ptDataToAeroSimRC->Channel_afNewValue_TX[ CH_6       ],  ptDataToAeroSimRC->Channel_afNewValue_RX[ CH_6       ],
+            ptDataFromAeroSimRC->Channel_afValue_TX[  CH_7       ],  ptDataFromAeroSimRC->Channel_afValue_RX[  CH_7       ],
+            ptDataToAeroSimRC->Channel_afNewValue_TX[ CH_7       ],  ptDataToAeroSimRC->Channel_afNewValue_RX[ CH_7       ],
+            ptDataFromAeroSimRC->Channel_afValue_TX[  CH_PLUGIN_1],  ptDataFromAeroSimRC->Channel_afValue_RX[  CH_PLUGIN_1],
+            ptDataToAeroSimRC->Channel_afNewValue_TX[ CH_PLUGIN_1],  ptDataToAeroSimRC->Channel_afNewValue_RX[ CH_PLUGIN_1],
+            ptDataFromAeroSimRC->Channel_afValue_TX[  CH_PLUGIN_2],  ptDataFromAeroSimRC->Channel_afValue_RX[  CH_PLUGIN_2],
+            ptDataToAeroSimRC->Channel_afNewValue_TX[ CH_PLUGIN_2],  ptDataToAeroSimRC->Channel_afNewValue_RX[ CH_PLUGIN_2],
+            ptDataFromAeroSimRC->Channel_afValue_TX[  CH_FPV_PAN ],  ptDataFromAeroSimRC->Channel_afValue_RX[  CH_FPV_PAN ],
+            ptDataToAeroSimRC->Channel_afNewValue_TX[ CH_FPV_PAN ],  ptDataToAeroSimRC->Channel_afNewValue_RX[ CH_FPV_PAN ],
+            ptDataFromAeroSimRC->Channel_afValue_TX[  CH_FPV_TILT],  ptDataFromAeroSimRC->Channel_afValue_RX[  CH_FPV_TILT],
+            ptDataToAeroSimRC->Channel_afNewValue_TX[ CH_FPV_TILT],  ptDataToAeroSimRC->Channel_afNewValue_RX[ CH_FPV_TILT],
 
             ptDataFromAeroSimRC->Menu_nFlags_MenuItem_Status,
 
@@ -273,11 +300,6 @@ void InfoText(const TDataFromAeroSimRC *ptDataFromAeroSimRC, TDataToAeroSimRC *p
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAeroSimRC,
                                          TDataToAeroSimRC   *ptDataToAeroSimRC)
 {
-    // debug info is shown on the screen
-    ptDataToAeroSimRC->Debug_pucOnScreenInfoText = g_strDebugInfo;
-
-    InfoText(ptDataFromAeroSimRC, ptDataToAeroSimRC);
-
     // By default do not change the Menu Items of type CheckBox
     ptDataToAeroSimRC->Menu_nFlags_MenuItem_New_CheckBox_Status = ptDataFromAeroSimRC->Menu_nFlags_MenuItem_Status;
 
@@ -340,7 +362,7 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAer
                 stream << qreal(ptDataFromAeroSimRC->Model_fBatteryVoltage);
                 stream << qreal(ptDataFromAeroSimRC->Model_fBatteryCurrent);
 
-                // send data
+                // send data to remote side
                 if(outSocket->writeDatagram(data, outHost, outPort) == -1) {
                     QTextStream out(&dbglog);
                     out << "host: " << outHost.toString()
@@ -348,13 +370,25 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAer
                         << " socket error: " << outSocket->errorString() << "\n";
                 }
             }
+            readDatagram();
             // recive data
             if(isRxEnable) {
-                if(inSocket->hasPendingDatagrams())
-                    readDatagram();
+                for (int i = 0; i < 4; ++i) {
+                    ptDataToAeroSimRC->Channel_afNewValue_TX[i] = float(channel[i]);
+                    ptDataToAeroSimRC->Channel_abOverride_TX[i] = true;
+                }
+                ptDataToAeroSimRC->Channel_afNewValue_TX[CH_FPV_PAN] = float(channel[4]);
+                ptDataToAeroSimRC->Channel_abOverride_TX[CH_FPV_PAN] = true;
+                ptDataToAeroSimRC->Channel_afNewValue_TX[CH_FPV_TILT] = float(channel[5]);
+                ptDataToAeroSimRC->Channel_abOverride_TX[CH_FPV_TILT] = true;
             }
         }
     }
+
+    // debug info is shown on the screen
+    ptDataToAeroSimRC->Debug_pucOnScreenInfoText = g_strDebugInfo;
+
+    InfoText(ptDataFromAeroSimRC, ptDataToAeroSimRC);
 
     g_bFirstRun = false;
 }
