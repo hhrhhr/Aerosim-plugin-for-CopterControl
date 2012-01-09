@@ -1,6 +1,9 @@
 TEMPLATE  = subdirs
-CONFIG   += ordered
+CONFIG   += warn_on #ordered
 
-SUBDIRS += plugin_AeroSIMRC tools copydata
+SUBDIRS += plugin tools copydata
 
-copydata.file = plugin_AeroSIMRC/copydata.pri
+plugin.file         = src/plugin.pro
+tools.file          = src/tools.pro
+copydata.file       = copydata.pri
+

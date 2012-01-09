@@ -1,5 +1,5 @@
-#ifndef _plugin_AeroSIMRC_h_
-#define _plugin_AeroSIMRC_h_
+#ifndef _plugin_h_
+#define _plugin_h_
 
 // Qt includes begin
 #include <QtCore>
@@ -60,4 +60,4 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Close();
 
 #pragma pack (pop, r1)
 
-#endif // _plugin_AeroSIMRC_h_
+#endif // _plugin_h_

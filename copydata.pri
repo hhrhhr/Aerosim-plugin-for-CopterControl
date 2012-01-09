@@ -1,16 +1,18 @@
 TEMPLATE = subdirs
 
-FILES = cc_off.tga cc_on.tga cc_plugin.ini plugin.txt
+RES_DIR = $${PWD}/share
+CC_DIR = CopterControl
 
-for(file, FILES) {
-    !exists(CopterControl/) {
-        system(mkdir CopterControl)
+FILES = \
+    $${RES_DIR}/cc_off.tga \
+    $${RES_DIR}/cc_on.tga \
+    $${RES_DIR}/cc_plugin.ini \
+    $${RES_DIR}/plugin.txt
+
+    FILES_WIN = $${FILES}
+    FILES_WIN ~= s,/,\\,g
+    DEST_DIR_WIN = $${OUT_PWD}/$${CC_DIR}
+    DEST_DIR_WIN ~= s,/,\\,g
+    for(file, FILES_WIN) {
+        system(copy $${file} $${DEST_DIR_WIN})
     }
-    !exists(CopterControl/$$file) {
-        FROM = $$PWD/share/$$file
-        FROM ~= s|/|\\|g
-        TO = $$OUT_PWD/CopterControl
-        TO ~= s|/|\\|g
-        system(copy \"$$FROM\" \"$$TO\" > nul)
-    }
-}

@@ -2,41 +2,35 @@
             Plugin for connect CopterControl board to simulator.
 ===============================================================================
 
-
 ---------------------------------------
         Building
 ---------------------------------------
 
 a) download and install:
-    - Qt 4.8
     - MinGW 4.4
+    - Qt 4.8
 b) run:
     qmake
     mingw32-make
-
 
 ---------------------------------------
         Installing
 ---------------------------------------
 
-a) Copy directory "CopterControl" from build location to simulator's "Plugin" folder.
-b) Copy dep\*.dll from source tree to simulator's root folder.
-
+a) Copy "CopterControl" from build location to simulator's "Plugin" folder.
+b) Copy "lib\*.dll" from source tree to simulator's root folder.
 
 ---------------------------------------
         Configure plugin
 ---------------------------------------
 
-CopterControl\cc_plugin.ini
+"CopterControl\cc_plugin.ini"
 
     remote_host, remote_port - IP address and port of target
     local_host, local_port   - IP address and port of simulator
-
-
 
 ---------------------------------------
         Tools
 ---------------------------------------
 
-udp_test utility can be used for test connection.
-
+"tools\udp_test" utility can be used for test connection.

@@ -1,21 +1,17 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2012-01-07T04:57:25
-#
-#-------------------------------------------------
-
 QT       += core gui network
 
-TARGET = udp_test
+TARGET   = udp_test
 TEMPLATE = app
 
 ### input ###
-SOURCES += main.cpp\
-        widget.cpp
 
-HEADERS  += widget.h
+SOURCES += udptestmain.cpp \
+           udptestwidget.cpp
 
-FORMS    += widget.ui
+HEADERS += udptestwidget.h
+
+FORMS   += udptestwidget.ui
 
 ### output ###
-DESTDIR = bin
+
+DESTDIR = ../tools
