@@ -35,6 +35,42 @@ quint32 packetCounter = 0;
 qint32 errors = 0;
 // Qt variable end
 
+extern "C" BOOL APIENTRY DllMain(HANDLE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserved*/)
+{
+    switch (fdwReason) {
+    case DLL_PROCESS_DETACH:
+//        printf("DLL_PROCESS_DETACH\n");
+        // free resources
+        if(outSocket) {
+            delete outSocket;
+            outSocket = NULL;
+        }
+        if(inSocket) {
+            delete inSocket;
+            inSocket = NULL;
+        }
+        break;
+
+    case DLL_PROCESS_ATTACH:
+//        printf("DLL_PROCESS_ATTACH\n");
+//        printf("HINSTANCE = %x\n", (unsigned int)hinstDLL);
+//        if (lpvReserved)
+//            printf("DLL is loaded implicitly\n");
+//        else
+//            printf("DLL is loaded explicitly\n");
+        break;
+
+    case DLL_THREAD_ATTACH:
+//        printf("DLL_THREAD_ATTACH\n");
+        break;
+
+    case DLL_THREAD_DETACH:
+//        printf("DLL_THREAD_DETACH\n");
+        break;
+    }
+    return TRUE;
+}
+
 // This function is already written for you. No need to modify it.
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(unsigned long *pnSizeOf_TDataFromAeroSimRC,
                                                        unsigned long *pnSizeOf_TDataToAeroSimRC,
