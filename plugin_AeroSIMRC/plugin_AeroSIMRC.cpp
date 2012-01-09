@@ -31,6 +31,8 @@ QHostAddress outHost;
 quint16 outPort;
 QFile dbglog;
 qreal channel[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+quint32 packetCounter = 0;
+qint32 errors = 0;
 // Qt variable end
 
 // This function is already written for you. No need to modify it.
@@ -57,7 +59,7 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(TPluginInit *ptPluginInit)
     // Qt code begin
     {
         dbglog.setFileName(QString(g_strOutputFolder) + "/dbglog.txt");
-        if (!dbglog.open(QIODevice::WriteOnly | QIODevice::Text))
+        if(!dbglog.open(QIODevice::WriteOnly | QIODevice::Text))
             return;
 
         blueLedTimer.start();
@@ -83,14 +85,11 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(TPluginInit *ptPluginInit)
 
 //-----------------------------------------------------------------------------
 
-void processDatagram(const QByteArray &data)
-{
-//    sprintf(g_strDebugInfo + strlen(g_strDebugInfo), "\n222: %d", data.size());
-
-}
-
 void readDatagram()
 {
+    if(!inSocket->waitForReadyRead(3))
+        errors += 1;
+
     while (inSocket->hasPendingDatagrams()) {
         QByteArray datagram;
         datagram.resize(inSocket->pendingDatagramSize());
@@ -98,23 +97,33 @@ void readDatagram()
         quint16 senderPort;
         quint64 datagramSize;
         datagramSize = inSocket->readDatagram(datagram.data(), datagram.size(),
-                                               &sender, &senderPort);
-//        processDatagram(datagram);
+                                              &sender, &senderPort);
+        if(datagramSize > 56)
+            errors += 1000000;
+
         QDataStream stream(&datagram, QIODevice::ReadOnly);
-//        stream.setFloatingPointPrecision();
+        //        stream.setFloatingPointPrecision();
         // check magic header
         quint32 magic;
         stream >> magic;
-        if (magic == 0x52434D44) {  // "RCMD"
-            sprintf(g_strDebugInfo + strlen(g_strDebugInfo), "magic ok\n");
+        if(magic == 0x52434D44) {  // "RCMD"
+            // read channels
             stream >> channel[CH_AILERON];
             stream >> channel[CH_ELEVATOR];
             stream >> channel[CH_THROTTLE];
             stream >> channel[CH_RUDDER];
             stream >> channel[CH_5];
             stream >> channel[CH_6];
+            // read counter
+            quint32 newPacketCounter;
+            stream >> newPacketCounter;
+
+            sprintf(g_strDebugInfo + strlen(g_strDebugInfo),
+                    "magic ok, delta: %d\n",
+                    packetCounter - newPacketCounter);
         } else {
-            sprintf(g_strDebugInfo + strlen(g_strDebugInfo), "wrong magic\n");
+            sprintf(g_strDebugInfo + strlen(g_strDebugInfo),
+                    "wrong magic\n");
         }
     }
 }
@@ -162,7 +171,7 @@ void Run_BlinkLEDs(const TDataFromAeroSimRC *ptDataFromAeroSimRC,
 {
     Q_UNUSED(ptDataFromAeroSimRC);
 
-    if (isEnable) {
+    if(isEnable) {
         if(blueLedTimer.elapsed() >= blueLedTimeout) {
             ptDataToAeroSimRC->Menu_nFlags_MenuItem_New_CheckBox_Status ^= MASK_MENU_ITEM__LED_BLUE;
             blueLedTimer.restart();
@@ -179,23 +188,18 @@ void Run_BlinkLEDs(const TDataFromAeroSimRC *ptDataFromAeroSimRC,
  ******************************************************************************/
 void InfoText(const TDataFromAeroSimRC *ptDataFromAeroSimRC, TDataToAeroSimRC *ptDataToAeroSimRC)
 {
-    sprintf(g_strDebugInfo,
+    sprintf(g_strDebugInfo + strlen(g_strDebugInfo),
             "----------------------------------------------------------------------\n"
-            "Plugin Folder = %s\n"
+            "Plugin Folder = %s  "
             "Output Folder = %s\n"
-            "nStructSize = %d\n"
-            "\n" // Simulation Data
-            "fIntegrationTimeStep = %f\n"
+            "nStructSize = %d  fIntegrationTimeStep = %f\n"
             "\n" // Model data
             "fPosX,Y,Z    = (% 8.2f, % 8.2f, % 8.2f)\n"
             "fVelX,Y,Z    = (% 8.2f, % 8.2f, % 8.2f)\n"
             "fAngVelX,Y,Z = (% 8.5f, % 8.5f, % 8.5f)\n"
             "fAccelX,Y,Z  = (% 8.5f, % 8.5f, % 8.5f)\n"
-            "\n"
-            "Lat, Long   = % 10.5f, % 10.5f\n"
-            "\n"
+            "Lat, Long   = % 10.5f, % 10.5f  "
             "fHeightAboveTerrain = %f\n"
-            "\n"
             "fHeading = % 6.4f   fPitch = % 6.4f   fRoll = % 6.4f\n"
             "\n"
             "Aileron   TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
@@ -211,10 +215,8 @@ void InfoText(const TDataFromAeroSimRC *ptDataFromAeroSimRC, TDataToAeroSimRC *p
             "FPVCamTil TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
             "\n"
             "MenuItems = %lu\n"
-            "\n"
             "Model Initial Pos (%f, %f, %f)\n"
             "Model Initial HPR (%f, %f, %f)\n"
-            "\n"
             "WP Home X,Y = (% 8.2f, % 8.2f)  Lat, Long = (% 10.5f, % 10.5f)  Description %s\n"
             "WP A    X,Y = (% 8.2f, % 8.2f)  Lat, Long = (% 10.5f, % 10.5f)  Description %s\n"
             "WP B    X,Y = (% 8.2f, % 8.2f)  Lat, Long = (% 10.5f, % 10.5f)  Description %s\n"
@@ -222,19 +224,15 @@ void InfoText(const TDataFromAeroSimRC *ptDataFromAeroSimRC, TDataToAeroSimRC *p
             "WP D    X,Y = (% 8.2f, % 8.2f)  Lat, Long = (% 10.5f, % 10.5f)  Description %s\n"
             "\n"
             "Engine1 = % 5.0f RPM   Engine2 = % 5.0f RPM   Engine3 = % 5.0f RPM   Engine4 = % 5.0f RPM\n"
-            "\n"
             "Wind = (% 8.2f, % 8.2f, % 8.2f)\n"
             "\n"
-            "Battery % 2.1f V  % 2.1f A   Consumed = % 2.3f Ah   Capacity = % 2.3f Ah\n"
-            "Fuel Consumed = % 2.3f l    Tank Capacity = % 2.3f l\n"
+            "Battery % 2.1f V  % 2.1f A    Consumed = % 2.3f Ah   Capacity = % 2.3f Ah\n"
+            "Fuel Consumed = % 2.3f l      Tank Capacity = % 2.3f l\n"
             "----------------------------------------------------------------------\n"
             ,
-            g_strPluginFolder,
-            g_strOutputFolder,
-            ptDataFromAeroSimRC->nStructSize,
+            g_strPluginFolder, g_strOutputFolder,
 
-            // Simulation Data
-            ptDataFromAeroSimRC->Simulation_fIntegrationTimeStep,
+            ptDataFromAeroSimRC->nStructSize, ptDataFromAeroSimRC->Simulation_fIntegrationTimeStep,
 
             // Model data
             ptDataFromAeroSimRC->Model_fPosX,     ptDataFromAeroSimRC->Model_fPosY,     ptDataFromAeroSimRC->Model_fPosZ,
@@ -300,6 +298,8 @@ void InfoText(const TDataFromAeroSimRC *ptDataFromAeroSimRC, TDataToAeroSimRC *p
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAeroSimRC,
                                          TDataToAeroSimRC   *ptDataToAeroSimRC)
 {
+    // init debuf string
+    sprintf(g_strDebugInfo, "errors: %d\n", errors);
     // By default do not change the Menu Items of type CheckBox
     ptDataToAeroSimRC->Menu_nFlags_MenuItem_New_CheckBox_Status = ptDataFromAeroSimRC->Menu_nFlags_MenuItem_Status;
 
@@ -316,12 +316,12 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAer
         Run_BlinkLEDs(ptDataFromAeroSimRC, ptDataToAeroSimRC, isEnable);
 
         // network
-        if (isEnable) {
+        if(isEnable) {
             // send data
-            if (isTxEnable) {
+            if(isTxEnable) {
                 QByteArray data;
                 // 220 - current size of datagram, change it if recieved data is changed!!!
-                data.resize(220);
+                data.resize(224);
                 QDataStream stream(&data, QIODevice::WriteOnly);
                 // magic header, "AERO"
                 stream << quint32(0x4153494D);
@@ -361,6 +361,8 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAer
                 // electric
                 stream << qreal(ptDataFromAeroSimRC->Model_fBatteryVoltage);
                 stream << qreal(ptDataFromAeroSimRC->Model_fBatteryCurrent);
+                // packet counter
+                stream << packetCounter;
 
                 // send data to remote side
                 if(outSocket->writeDatagram(data, outHost, outPort) == -1) {
@@ -370,9 +372,10 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAer
                         << " socket error: " << outSocket->errorString() << "\n";
                 }
             }
-            readDatagram();
             // recive data
             if(isRxEnable) {
+                readDatagram();
+
                 for (int i = 0; i < 4; ++i) {
                     ptDataToAeroSimRC->Channel_afNewValue_TX[i] = float(channel[i]);
                     ptDataToAeroSimRC->Channel_abOverride_TX[i] = true;
@@ -381,14 +384,16 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const TDataFromAeroSimRC *ptDataFromAer
                 ptDataToAeroSimRC->Channel_abOverride_TX[CH_FPV_PAN] = true;
                 ptDataToAeroSimRC->Channel_afNewValue_TX[CH_FPV_TILT] = float(channel[5]);
                 ptDataToAeroSimRC->Channel_abOverride_TX[CH_FPV_TILT] = true;
+
+                packetCounter += 1;
             }
         }
     }
 
     // debug info is shown on the screen
-    ptDataToAeroSimRC->Debug_pucOnScreenInfoText = g_strDebugInfo;
-
     InfoText(ptDataFromAeroSimRC, ptDataToAeroSimRC);
+
+    ptDataToAeroSimRC->Debug_pucOnScreenInfoText = g_strDebugInfo;
 
     g_bFirstRun = false;
 }

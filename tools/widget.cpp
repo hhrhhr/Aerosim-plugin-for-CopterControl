@@ -10,6 +10,7 @@ Widget::Widget(QWidget *parent) :
     inSocket = NULL;
     outSocket = NULL;
     screenTimeout.start();
+    packetCounter = 0;
 }
 
 Widget::~Widget()
@@ -143,6 +144,7 @@ void Widget::processDatagram(const QByteArray &data)
         stream >> alt;
         stream >> head >> pitch >> roll;
         stream >> volt >> curr;
+        stream >> packetCounter;
 
         if(ui->tabWidget->currentIndex() != 0)
             return;
@@ -187,8 +189,8 @@ void Widget::processDatagram(const QByteArray &data)
         ui->listWidget->addItem("model electrics");
         ui->listWidget->addItem(QString::number(volt) + "V\t" +
                                 QString::number(curr) + "A");
-        ui->listWidget->addItem("datagram size (bytes)");
-        ui->listWidget->addItem(QString::number(data.size()));
+        ui->listWidget->addItem("datagram size (bytes), packet counter");
+        ui->listWidget->addItem(QString::number(data.size()) + "\t" + QString::number(packetCounter));
 
         screenTimeout.restart();
 
@@ -243,12 +245,15 @@ void Widget::sendDatagram()
     ch6 = ui->ch6->value() * coef;
 
     QByteArray data;
-    data.resize(52);
+    // 56 - current size of values
+    data.resize(56);
     QDataStream stream(&data, QIODevice::WriteOnly);
     // magic header, "RCMD"
     stream << quint32(0x52434D44);
     // send channels
     stream << ch1 << ch2 << ch3 << ch4 << ch5 << ch6;
+    // send readed counter
+    stream << packetCounter;
 
     if(outSocket->writeDatagram(data, outHost, outPort) == -1) {
         qDebug() << "outHost" << outHost << " "

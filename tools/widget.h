@@ -34,6 +34,7 @@ private:
     QUdpSocket *outSocket;
     QHostAddress outHost;
     quint16 outPort;
+    quint32 packetCounter;
 
     void processDatagram(const QByteArray &data);
     void sendDatagram();
