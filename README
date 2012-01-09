@@ -19,8 +19,8 @@ b) run:
         Installing
 ---------------------------------------
 
-a) Copy directory "CopterControl" to simulator's "Plugin" folder.
-b) Copy dep\*.dll to simulator's root folder.
+a) Copy directory "CopterControl" from build location to simulator's "Plugin" folder.
+b) Copy dep\*.dll from source tree to simulator's root folder.
 
 
 ---------------------------------------
@@ -29,7 +29,8 @@ b) Copy dep\*.dll to simulator's root folder.
 
 CopterControl\cc_plugin.ini
 
-    host, port - hostname or IP address and port of target (server)
+    remote_host, remote_port - IP address and port of target
+    local_host, local_port   - IP address and port of simulator
 
 
 
@@ -39,4 +40,3 @@ CopterControl\cc_plugin.ini
 
 udp_test utility can be used for test connection.
 
-	host, port - hostname or IP address of local computer
