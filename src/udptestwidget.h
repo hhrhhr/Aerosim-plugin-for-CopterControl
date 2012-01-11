@@ -5,6 +5,7 @@
 #include <QUdpSocket>
 #include <QTime>
 #include <QDebug>
+#include <QTimer>
 
 namespace Ui {
 class Widget;
@@ -25,6 +26,9 @@ private slots:
     void on_btTransmitStop_clicked();
 
     void readDatagram();
+    void sendDatagram();
+
+    void on_manualSend_clicked(bool checked);
 
 private:
     Ui::Widget *ui;
@@ -37,7 +41,8 @@ private:
     quint32 packetCounter;
 
     void processDatagram(const QByteArray &data);
-    void sendDatagram();
+
+    QTimer *manualSend;
 };
 
 #endif // WIDGET_H

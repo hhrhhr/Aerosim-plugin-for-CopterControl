@@ -5,16 +5,21 @@ Widget::Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Widget)
 {
+    qDebug() << "Widget::Widget";
     ui->setupUi(this);
 
     inSocket = NULL;
     outSocket = NULL;
     screenTimeout.start();
     packetCounter = 0;
+
+    manualSend = new QTimer(this);
+    connect(manualSend, SIGNAL(timeout()), this, SLOT(sendDatagram()), Qt::DirectConnection);
 }
 
 Widget::~Widget()
 {
+    delete manualSend;
     if(outSocket) {
         delete outSocket;
         outSocket = NULL;
@@ -33,16 +38,17 @@ void Widget::on_btReciveStart_clicked()
     on_btReciveStop_clicked();
 
     inSocket = new QUdpSocket();
-    connect(inSocket, SIGNAL(readyRead()), this, SLOT(readDatagram()), Qt::DirectConnection);
-
-    QString host = ui->simHost->text();
-    quint16 port = ui->simPort->text().toInt();
+    QString host = ui->localHost->text();
+    quint16 port = ui->localPort->text().toInt();
 
     if (inSocket->bind(QHostAddress(host), port)) {
+        connect(inSocket, SIGNAL(readyRead()),
+                this, SLOT(readDatagram()), Qt::DirectConnection);
+
         ui->listWidget->addItem("bind ok");
         ui->btReciveStop->setEnabled(1);
-        ui->simHost->setDisabled(1);
-        ui->simPort->setDisabled(1);
+        ui->localHost->setDisabled(1);
+        ui->localPort->setDisabled(1);
         ui->btReciveStart->setDisabled(1);
     } else {
         ui->listWidget->addItem("bind error: " + inSocket->errorString());
@@ -59,8 +65,8 @@ void Widget::on_btReciveStop_clicked()
         ui->listWidget->addItem("socket not found");
     }
     ui->btReciveStart->setEnabled(1);
-    ui->simHost->setEnabled(1);
-    ui->simPort->setEnabled(1);
+    ui->localHost->setEnabled(1);
+    ui->localPort->setEnabled(1);
     ui->btReciveStop->setDisabled(1);
 }
 
@@ -69,17 +75,14 @@ void Widget::on_btTransmitStart_clicked()
     on_btTransmitStop_clicked();
 
     outSocket = new QUdpSocket();
-    outHost = ui->localHost->text();
-    outPort = ui->localPort->text().toInt();
+    outHost = ui->simHost->text();
+    outPort = ui->simPort->text().toInt();
 
     ui->listWidget->addItem("transmit started");
     ui->btTransmitStop->setEnabled(1);
-    ui->localHost->setDisabled(1);
-    ui->localPort->setDisabled(1);
+    ui->simHost->setDisabled(1);
+    ui->simPort->setDisabled(1);
     ui->btTransmitStart->setDisabled(1);
-
-    // one-shot connection
-//    sendDatagram();
 }
 
 void Widget::on_btTransmitStop_clicked()
@@ -88,10 +91,12 @@ void Widget::on_btTransmitStop_clicked()
         delete outSocket;
         outSocket = NULL;
         ui->listWidget->addItem("transmit stopped");
+    } else {
+        ui->listWidget->addItem("transmit socket not found");
     }
     ui->btTransmitStart->setEnabled(1);
-    ui->localHost->setEnabled(1);
-    ui->localPort->setEnabled(1);
+    ui->simHost->setEnabled(1);
+    ui->simPort->setEnabled(1);
     ui->btTransmitStop->setDisabled(1);
 }
 
@@ -107,8 +112,6 @@ void Widget::readDatagram()
         Q_UNUSED(datagramSize);
 
         processDatagram(datagram);
-        if(outSocket)
-            sendDatagram();
     }
 }
 
@@ -195,18 +198,16 @@ void Widget::processDatagram(const QByteArray &data)
         screenTimeout.restart();
 
     } else if(magic == 0x52434D44) { // "RCMD"
+        if(!ui->readCH->isChecked())
+            return;
+
         qreal ch1, ch2, ch3, ch4, ch5, ch6;
         stream >> ch1 >> ch2 >> ch3 >> ch4 >> ch5 >> ch6;
 
-        if(ui->sendCH->isChecked())
-            return;
-
-        if (screenTimeout.elapsed() < 200)
-            return;
-
-        ui->listWidget->clear();
-
         if(ui->tabWidget->currentIndex() == 0) {
+            if (screenTimeout.elapsed() < 200)
+                return;
+            ui->listWidget->clear();
             ui->listWidget->addItem("channels");
             ui->listWidget->addItem("CH1: " + QString::number(ch1));
             ui->listWidget->addItem("CH2: " + QString::number(ch2));
@@ -215,6 +216,8 @@ void Widget::processDatagram(const QByteArray &data)
             ui->listWidget->addItem("CH5: " + QString::number(ch5));
             ui->listWidget->addItem("CH6: " + QString::number(ch6));
         } else if(ui->tabWidget->currentIndex() == 1) {
+            if (screenTimeout.elapsed() < 100)
+                return;
             ui->ch1->setValue(int(ch1 * 512));
             ui->ch2->setValue(int(ch2 * 512));
             ui->ch3->setValue(int(ch3 * 512));
@@ -222,7 +225,6 @@ void Widget::processDatagram(const QByteArray &data)
             ui->ch5->setValue(int(ch5 * 512));
             ui->ch6->setValue(int(ch6 * 512));
         }
-
         screenTimeout.restart();
     } else {
         qDebug() << "unknown magic:" << magic;
@@ -231,7 +233,9 @@ void Widget::processDatagram(const QByteArray &data)
 
 void Widget::sendDatagram()
 {
-    if(ui->readCH->isChecked())
+    if(!ui->sendCH->isChecked())
+        return;
+    if(!outSocket)
         return;
 
     qreal ch1, ch2, ch3, ch4, ch5, ch6;
@@ -245,7 +249,7 @@ void Widget::sendDatagram()
     ch6 = ui->ch6->value() * coef;
 
     QByteArray data;
-    // 56 - current size of values
+    // 56 - current size of values, 4(quint32) + 6*8(qreal) + 4(quint32)
     data.resize(56);
     QDataStream stream(&data, QIODevice::WriteOnly);
     // magic header, "RCMD"
@@ -255,9 +259,17 @@ void Widget::sendDatagram()
     // send readed counter
     stream << packetCounter;
 
-    if(outSocket->writeDatagram(data, outHost, outPort) == -1) {
-        qDebug() << "outHost" << outHost << " "
+    if (outSocket->writeDatagram(data, outHost, outPort) == -1) {
+        qDebug() << "write failed: outHost" << outHost << " "
                  << "outPort " << outPort << " "
                  << outSocket->errorString();
     }
+}
+
+void Widget::on_manualSend_clicked(bool checked)
+{
+    if (checked)
+        manualSend->start(100);
+    else
+        manualSend->stop();
 }

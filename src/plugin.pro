@@ -1,10 +1,17 @@
 !win32 { error("sorry, only win32 supported") }
 
-QT  += network
+#QT  += network
 QT  -= gui
 
 TARGET      = plugin_AeroSIMRC
 TEMPLATE    = lib
+
+# disable depend of MSVRT*.dll
+win32-msvc* {
+    QMAKE_CXXFLAGS_RELEASE -= -MD
+    QMAKE_CXXFLAGS_MT_DLL += -MT
+}
+
 
 # input <<<
 
@@ -13,9 +20,11 @@ HEADERS += \
     datatoaerosim.h \
     plugininit.h \
     plugin.h
+#    udpconnect.h
 
 SOURCES += \
     plugin.cpp
+#    udpconnect.cpp
 
 # output >>>
 
