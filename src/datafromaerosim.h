@@ -1,118 +1,118 @@
 #ifndef DATAFROMAEROSIM_H
 #define DATAFROMAEROSIM_H
 
-enum {
-    ch_aileron,
-    ch_elevator,
-    ch_throttle,
-    ch_rudder,
-    ch_5,
-    ch_6,
-    ch_7,
-    ch_8,
-    ch_9,
-    ch_gear,
-    ch_flaps,
-    ch_fpv_pan,
-    ch_fpv_tilt,
-    ch_brakes,
-    ch_spoiler,
-    ch_smoke,
-    ch_fire,
-    ch_f_mode,
-    ch_alt_hold,
-    ch_fpv_hold,
-    ch_reset,
-    ch_mouse_tx,
-    ch_plugin_1,
-    ch_plugin_2,
-    ch_thr_hold,
-    ch_carefree,
-    ch_27,
-    ch_l_motor,
-    ch_r_motor,
-    ch_30_mix,
-    ch_31_mix,
-    ch_32_mix,
-    ch_33_mix,
-    ch_34_mix,
-    ch_35_mix,
-    ch_36_mix,
-    ch_37_mix,
-    ch_38_mix,
-    ch_39_mix
+enum Channels {
+    ChAileron,
+    ChElevator,
+    ChThrottle,
+    ChRudder,
+    Ch5,
+    Ch6,
+    Ch7,
+    Ch8,
+    Ch9,
+    ChGear,
+    ChFlaps,
+    ChFpvPan,
+    ChFpvTilt,
+    ChBrakes,
+    ChSpoiler,
+    ChSmoke,
+    ChFire,
+    ChFMode,
+    ChAltHold,
+    ChFpvHold,
+    ChReset,
+    ChMouseTx,
+    ChPlugin1,
+    ChPlugin2,
+    ChThrHold,
+    ChCareFree,
+    Ch27,
+    ChLMotor,
+    ChRMotor,
+    Ch30Mix,
+    Ch31Mix,
+    Ch32Mix,
+    Ch33Mix,
+    Ch34Mix,
+    Ch35Mix,
+    Ch36Mix,
+    Ch37Mix,
+    Ch38Mix,
+    Ch39Mix
 };
 
 struct simToPlugin
 {
-    unsigned short nStructSize;
-    float Simulation_fIntegrationTimeStep;
-    float Channel_afValue_TX[AEROSIMRC_MAX_CHANNELS];
-    float Channel_afValue_RX[AEROSIMRC_MAX_CHANNELS];
-    unsigned char *OSD_pVideoBuffer;
-    unsigned long Menu_nFlags_MenuItem_Status;
-    float Scenario_fInitialModelPosX;
-    float Scenario_fInitialModelPosY;
-    float Scenario_fInitialModelPosZ;
-    float Scenario_fInitialModelHeading;
-    float Scenario_fInitialModelPitch;
-    float Scenario_fInitialModelRoll;
-    float Scenario_fWPHome_X;
-    float Scenario_fWPHome_Y;
-    float Scenario_fWPHome_Lat;
-    float Scenario_fWPHome_Long;
-    const char *Scenario_strWPHome_Description; // (m, deg, string)
-    float Scenario_fWPA_X;
-    float Scenario_fWPA_Y;
-    float Scenario_fWPA_Lat;
-    float Scenario_fWPA_Long;
-    const char *Scenario_strWPA_Description;    // (m, deg, string)
-    float Scenario_fWPB_X;
-    float Scenario_fWPB_Y;
-    float Scenario_fWPB_Lat;
-    float Scenario_fWPB_Long;
-    const char *Scenario_strWPB_Description;    // (m, deg, string)
-    float Scenario_fWPC_X;
-    float Scenario_fWPC_Y;
-    float Scenario_fWPC_Lat;
-    float Scenario_fWPC_Long;
-    const char *Scenario_strWPC_Description;    // (m, deg, string)
-    float Scenario_fWPD_X;
-    float Scenario_fWPD_Y;
-    float Scenario_fWPD_Lat;
-    float Scenario_fWPD_Long;
-    const char *Scenario_strWPD_Description;    // (m, deg, string)
-    float Model_fPosX;
-    float Model_fPosY;
-    float Model_fPosZ;
-    float Model_fVelX;
-    float Model_fVelY;
-    float Model_fVelZ;
-    float Model_fAngVelX;
-    float Model_fAngVelY;
-    float Model_fAngVelZ;
-    float Model_fAccelX;
-    float Model_fAccelY;
-    float Model_fAccelZ;
-    double Model_fLatitude;
-    double Model_fLongitude;
-    float  Model_fHeightAboveTerrain;
-    float Model_fHeading;
-    float Model_fPitch;
-    float Model_fRoll;
-    float Model_fWindVelX;
-    float Model_fWindVelY;
-    float Model_fWindVelZ;
-    float  Model_fEngine1_RPM;
-    float  Model_fEngine2_RPM;
-    float  Model_fEngine3_RPM;
-    float  Model_fEngine4_RPM;
-    float  Model_fBatteryVoltage;          // V
-    float  Model_fBatteryCurrent;          // A
-    float  Model_fBatteryConsumedCharge;   // Ah
-    float  Model_fBatteryCapacity;         // Ah
-    float  Model_fFuelConsumed;            // l
-    float  Model_fFuelTankCapacity;        // l
+    unsigned short structSize;
+    float simTimeStep;
+    float chSimTX[AEROSIMRC_MAX_CHANNELS];
+    float chSimRX[AEROSIMRC_MAX_CHANNELS];
+    unsigned char *OSDVideoBuf;
+    unsigned long simMenuStatus;
+    float initPosX;
+    float initPosY;
+    float initPosZ;
+    float initHeading;
+    float initPitch;
+    float initRoll;
+    float wpHomeX;
+    float wpHomeY;
+    float wpHomeLat;
+    float wpHomeLong;
+    const char *wpHomeDesc; // (m, deg, string)
+    float wpAX;
+    float wpAY;
+    float wpALat;
+    float wpALong;
+    const char *wpADesc;    // (m, deg, string)
+    float wpBX;
+    float wpBY;
+    float wpBLat;
+    float wpBLong;
+    const char *wpBDesc;    // (m, deg, string)
+    float wpCX;
+    float wpCY;
+    float wpCLat;
+    float wpCLong;
+    const char *wpCDesc;    // (m, deg, string)
+    float wpDX;
+    float wpDY;
+    float wpDLat;
+    float wpDLong;
+    const char *wpDDesc;    // (m, deg, string)
+    float posX;
+    float posY;
+    float posZ;
+    float velX;
+    float velY;
+    float velZ;
+    float angVelX;
+    float angVelY;
+    float angVelZ;
+    float accelX;
+    float accelY;
+    float accelZ;
+    double latitude;
+    double longitude;
+    float AGL;
+    float heading;
+    float pitch;
+    float roll;
+    float windVelX;
+    float windVelY;
+    float windVelZ;
+    float eng1RPM;
+    float eng2RPM;
+    float eng3RPM;
+    float eng4RPM;
+    float voltage;          // V
+    float current;          // A
+    float consumedCharge;   // Ah
+    float capacity;         // Ah
+    float fuelConsumed;            // l
+    float fuelTankCapacity;        // l
 };
 
 #endif // DATAFROMAEROSIM_H

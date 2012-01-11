@@ -1,8 +1,9 @@
 #ifndef _plugin_h_
 #define _plugin_h_
 
-/*// Qt includes begin
 #include <QtCore>
+/*// Qt includes begin
+#include <QByteArray>
 #include <QTime>
 #include <QSettings>
 #include <QFile>
@@ -12,10 +13,19 @@
 */
 
 // Make sure the struct is byte aligned
+// Custom Menu Item masks
+enum MenuMasks {
+    MenuCmdReset    = 1 << 0,
+    MenuEnable      = 1 << 1,
+    MenuTx          = 1 << 2,
+    MenuRx          = 1 << 3,
+    MenuLedBlue     = 1 << 4,
+    MenuLedGreen    = 1 << 5
+};
+
 #pragma pack (push, r1, 1)
 
 #define AEROSIMRC_MAX_CHANNELS 39
-
 #include "datafromaerosim.h"
 #include "datatoaerosim.h"
 #include "plugininit.h"
@@ -23,18 +33,18 @@
 #define SIM_DLL_EXPORT extern "C" __declspec(dllexport)
 
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(
-        unsigned long *pnSizeOf_TDataFromAeroSimRC,
-        unsigned long *pnSizeOf_TDataToAeroSimRC,
-        unsigned long *pnSizeOf_TPluginInit
+        quint32 *sizeSimToPlugin,
+        quint32 *sizePluginToSim,
+        quint32 *sizePluginInit
         );
 
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(
-        pluginInit *pTPluginInit
+        pluginInit *p
         );
 
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(
-        const simToPlugin *pTDataFromAeroSimRC,
-              pluginToSim   *ptDataToAeroSimRC
+        const simToPlugin *stp,
+              pluginToSim *pts
         );
 
 #pragma pack (pop, r1)

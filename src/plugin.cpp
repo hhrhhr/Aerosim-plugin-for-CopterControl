@@ -1,28 +1,16 @@
 #include "plugin.h"
 //#include "udpconnect.h"
 
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
-#include <windows.h>
-#include <stdio.h>
-
-// Custom Menu Item masks
-#define MENU_CMD_RESET  (1 << 0)
-#define MENU_ENABLE     (1 << 1)
-#define MENU_TX         (1 << 2)
-#define MENU_RX         (1 << 3)
-#define MENU_LED_BLUE   (1 << 4)
-#define MENU_LED_GREEN  (1 << 5)
+//#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+//#include <windows.h>
 
 // Used to initialise menu checkboxes showing OSD with HUD
-bool g_bFirstRun = true;
+bool isFirstRun = TRUE;
 
 // static to remain in memory when function exits
-const unsigned int dbg_sz = 4096;
-char debugInfo[dbg_sz] = "";
-unsigned int p_dbg = 0;
-
-char pluginFolder[MAX_PATH];
-char outputFolder[MAX_PATH];
+QString debugInfo;
+QString pluginFolder;
+QString outputFolder;
 
 /*// Qt variable begin
 QFile plglog;
@@ -34,26 +22,26 @@ qint32 errors = 0;
 // Qt variable end
 */
 
-extern "C" BOOL APIENTRY DllMain(HANDLE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserved*/)
+extern "C" int __stdcall DllMain(void * /*hinstDLL*/, quint32 fdwReason, void * /*lpvReserved*/)
 {
     switch (fdwReason) {
-    case DLL_PROCESS_DETACH:
+    case 0: //DLL_PROCESS_DETACH:
         // free resources
 //        delete udp;
         break;
-    case DLL_PROCESS_ATTACH:
+    case 1: //DLL_PROCESS_ATTACH:
         break;
-    case DLL_THREAD_ATTACH:
+    case 2: //DLL_THREAD_ATTACH:
         break;
-    case DLL_THREAD_DETACH:
+    case 3: //DLL_THREAD_DETACH:
         break;
     }
     return TRUE;
 }
 
-SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(unsigned long *sizeSimToPlugin,
-                                                       unsigned long *sizePluginToSim,
-                                                       unsigned long *sizePluginInit)
+SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(quint32 *sizeSimToPlugin,
+                                                       quint32 *sizePluginToSim,
+                                                       quint32 *sizePluginInit)
 {
     *sizeSimToPlugin = sizeof(simToPlugin);
     *sizePluginToSim = sizeof(pluginToSim);
@@ -62,8 +50,11 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(unsigned long *sizeSimToP
 
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
 {
-    strcpy_s(pluginFolder, p->strPluginFolder);
-    strcpy_s(outputFolder, p->strOutputFolder);
+    debugInfo.reserve(4096);
+    pluginFolder.reserve(MAX_PATH);
+    outputFolder.reserve(MAX_PATH);
+    pluginFolder = p->strPluginFolder;
+    outputFolder = p->strOutputFolder;
 }
 
 //-----------------------------------------------------------------------------
@@ -72,7 +63,7 @@ void Run_Command_Reset(/*const simToPlugin *stp,
                              pluginToSim *pts*/)
 {
     // Print some debug info, although it will only be seen during one frame
-    p_dbg += sprintf_s(debugInfo + p_dbg, dbg_sz - p_dbg, "\nRESET");
+    debugInfo.append("\nRESET");
 }
 
 void Run_BlinkLEDs(/*const simToPlugin *stp,*/
@@ -80,100 +71,99 @@ void Run_BlinkLEDs(/*const simToPlugin *stp,*/
                    bool &isEnable)
 {
     if(isEnable) {
-        pts->Menu_nFlags_MenuItem_New_CheckBox_Status |= MENU_LED_GREEN;
+        pts->newMenuStatus |= MenuLedBlue;
     } else {
-        pts->Menu_nFlags_MenuItem_New_CheckBox_Status = 0;
+        pts->newMenuStatus = 0;
     }
 }
 
 void InfoText(const simToPlugin *stp,
                     pluginToSim *pts)
 {
-    p_dbg += sprintf_s(debugInfo + p_dbg, dbg_sz - p_dbg,
-            "Plugin Folder = %s\n"
-            "Output Folder = %s\n"
-            "nStructSize = %d"
-            "fIntegrationTimeStep = %f\n"
-            "\n"
-            "Aileron   TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
-            "Elevator  TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
-            "Throttle  TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
-            "Rudder    TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
-            "Channel5  TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
-            "Channel6  TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
-            "Channel7  TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
-            "PluginCh1 TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
-            "PluginCh2 TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
-            "FPVCamPan TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
-            "FPVCamTil TX = % 4.2f  RX = % 4.2f  RCMD TX = % 4.2f  RX = % 4.2f\n"
-            "\n"
-            "MenuItems = %lu\n"
-            "----------------------------------------------------------------------\n"
-            ,pluginFolder
-            ,outputFolder
-            ,stp->nStructSize
-            ,stp->Simulation_fIntegrationTimeStep
-            ,stp->Channel_afValue_TX    [ch_aileron]
-            ,stp->Channel_afValue_RX    [ch_aileron]
-            ,pts->Channel_afNewValue_TX [ch_aileron]
-            ,pts->Channel_afNewValue_RX [ch_aileron]
-            ,stp->Channel_afValue_TX    [ch_elevator]
-            ,stp->Channel_afValue_RX    [ch_elevator]
-            ,pts->Channel_afNewValue_TX [ch_elevator]
-            ,pts->Channel_afNewValue_RX [ch_elevator]
-            ,stp->Channel_afValue_TX    [ch_throttle]
-            ,stp->Channel_afValue_RX    [ch_throttle]
-            ,pts->Channel_afNewValue_TX [ch_throttle]
-            ,pts->Channel_afNewValue_RX [ch_throttle]
-            ,stp->Channel_afValue_TX    [ch_rudder]
-            ,stp->Channel_afValue_RX    [ch_rudder]
-            ,pts->Channel_afNewValue_TX [ch_rudder]
-            ,pts->Channel_afNewValue_RX [ch_rudder]
-            ,stp->Channel_afValue_TX    [ch_5]
-            ,stp->Channel_afValue_RX    [ch_5]
-            ,pts->Channel_afNewValue_TX [ch_5]
-            ,pts->Channel_afNewValue_RX [ch_5]
-            ,stp->Channel_afValue_TX    [ch_6]
-            ,stp->Channel_afValue_RX    [ch_6]
-            ,pts->Channel_afNewValue_TX [ch_6]
-            ,pts->Channel_afNewValue_RX [ch_6]
-            ,stp->Channel_afValue_TX    [ch_7]
-            ,stp->Channel_afValue_RX    [ch_7]
-            ,pts->Channel_afNewValue_TX [ch_7]
-            ,pts->Channel_afNewValue_RX [ch_7]
-            ,stp->Channel_afValue_TX    [ch_plugin_1]
-            ,stp->Channel_afValue_RX    [ch_plugin_1]
-            ,pts->Channel_afNewValue_TX [ch_plugin_1]
-            ,pts->Channel_afNewValue_RX [ch_plugin_1]
-            ,stp->Channel_afValue_TX    [ch_plugin_2]
-            ,stp->Channel_afValue_RX    [ch_plugin_2]
-            ,pts->Channel_afNewValue_TX [ch_plugin_2]
-            ,pts->Channel_afNewValue_RX [ch_plugin_2]
-            ,stp->Channel_afValue_TX    [ch_fpv_pan]
-            ,stp->Channel_afValue_RX    [ch_fpv_pan]
-            ,pts->Channel_afNewValue_TX [ch_fpv_pan]
-            ,pts->Channel_afNewValue_RX [ch_fpv_pan]
-            ,stp->Channel_afValue_TX    [ch_fpv_tilt]
-            ,stp->Channel_afValue_RX    [ch_fpv_tilt]
-            ,pts->Channel_afNewValue_TX [ch_fpv_tilt]
-            ,pts->Channel_afNewValue_RX [ch_fpv_tilt]
-
-            ,stp->Menu_nFlags_MenuItem_Status
-            );
+    debugInfo.append(
+                QString(
+                    "Plugin Folder = %1\n"
+                    "Output Folder = %2\n"
+                    "nStructSize = %3  "
+                    "fIntegrationTimeStep = %4\n"
+                    "\n"
+                    "Aileron   TX = %5  RX = %6  RCMD TX = %7  RX = %8\n"
+                    "Elevator  TX = %9  RX = %10  RCMD TX = %11  RX = %12\n"
+                    "Throttle  TX = %13  RX = %14  RCMD TX = %15  RX = %16\n"
+                    "Rudder    TX = %17  RX = %18  RCMD TX = %19  RX = %20\n"
+                    "Channel5  TX = %21  RX = %22  RCMD TX = %23  RX = %24\n"
+                    "Channel6  TX = %25  RX = %26  RCMD TX = %27  RX = %28\n"
+                    "Channel7  TX = %29  RX = %30  RCMD TX = %31  RX = %32\n"
+                    "PluginCh1 TX = %33  RX = %34  RCMD TX = %35  RX = %36\n"
+                    "PluginCh2 TX = %37  RX = %38  RCMD TX = %39  RX = %40\n"
+                    "FPVCamPan TX = %41  RX = %42  RCMD TX = %43  RX = %44\n"
+                    "FPVCamTil TX = %45  RX = %46  RCMD TX = %47  RX = %48\n"
+                    "\n"
+                    "MenuItems = %49\n"
+                    )
+                .arg(pluginFolder)
+                .arg(outputFolder)
+                .arg(stp->structSize)
+                .arg(1.0 / stp->simTimeStep, 4, 'f', 1)
+                .arg(stp->chSimTX[ChAileron], 5, 'f', 2)
+                .arg(stp->chSimRX[ChAileron], 5, 'f', 2)
+                .arg(pts->chNewTX[ChAileron], 5, 'f', 2)
+                .arg(pts->chNewRX[ChAileron], 5, 'f', 2)
+                .arg(stp->chSimTX[ChElevator], 5, 'f', 2)
+                .arg(stp->chSimRX[ChElevator], 5, 'f', 2)
+                .arg(pts->chNewTX[ChElevator], 5, 'f', 2)
+                .arg(pts->chNewRX[ChElevator], 5, 'f', 2)
+                .arg(stp->chSimTX[ChThrottle], 5, 'f', 2)
+                .arg(stp->chSimRX[ChThrottle], 5, 'f', 2)
+                .arg(pts->chNewTX[ChThrottle], 5, 'f', 2)
+                .arg(pts->chNewRX[ChThrottle], 5, 'f', 2)
+                .arg(stp->chSimTX[ChRudder], 5, 'f', 2)
+                .arg(stp->chSimRX[ChRudder], 5, 'f', 2)
+                .arg(pts->chNewTX[ChRudder], 5, 'f', 2)
+                .arg(pts->chNewRX[ChRudder], 5, 'f', 2)
+                .arg(stp->chSimTX[Ch5], 5, 'f', 2)
+                .arg(stp->chSimRX[Ch5], 5, 'f', 2)
+                .arg(pts->chNewTX[Ch5], 5, 'f', 2)
+                .arg(pts->chNewRX[Ch5], 5, 'f', 2)
+                .arg(stp->chSimTX[Ch6], 5, 'f', 2)
+                .arg(stp->chSimRX[Ch6], 5, 'f', 2)
+                .arg(pts->chNewTX[Ch6], 5, 'f', 2)
+                .arg(pts->chNewRX[Ch6], 5, 'f', 2)
+                .arg(stp->chSimTX[Ch7], 5, 'f', 2)
+                .arg(stp->chSimRX[Ch7], 5, 'f', 2)
+                .arg(pts->chNewTX[Ch7], 5, 'f', 2)
+                .arg(pts->chNewRX[Ch7], 5, 'f', 2)
+                .arg(stp->chSimTX[ChPlugin1], 5, 'f', 2)
+                .arg(stp->chSimRX[ChPlugin1], 5, 'f', 2)
+                .arg(pts->chNewTX[ChPlugin1], 5, 'f', 2)
+                .arg(pts->chNewRX[ChPlugin1], 5, 'f', 2)
+                .arg(stp->chSimTX[ChPlugin2], 5, 'f', 2)
+                .arg(stp->chSimRX[ChPlugin2], 5, 'f', 2)
+                .arg(pts->chNewTX[ChPlugin2], 5, 'f', 2)
+                .arg(pts->chNewRX[ChPlugin2], 5, 'f', 2)
+                .arg(stp->chSimTX[ChFpvPan], 5, 'f', 2)
+                .arg(stp->chSimRX[ChFpvPan], 5, 'f', 2)
+                .arg(pts->chNewTX[ChFpvPan], 5, 'f', 2)
+                .arg(pts->chNewRX[ChFpvPan], 5, 'f', 2)
+                .arg(stp->chSimTX[ChFpvTilt], 5, 'f', 2)
+                .arg(stp->chSimRX[ChFpvTilt], 5, 'f', 2)
+                .arg(pts->chNewTX[ChFpvTilt], 5, 'f', 2)
+                .arg(pts->chNewRX[ChFpvTilt], 5, 'f', 2)
+                .arg(stp->simMenuStatus)
+    );
 }
 
 
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
                                                pluginToSim *pts)
 {
-    // init debug string
-    p_dbg = sprintf_s(debugInfo, dbg_sz, "---\n");
+    debugInfo = "---\n";
     // By default do not change the Menu Items of type CheckBox
-    pts->Menu_nFlags_MenuItem_New_CheckBox_Status = stp->Menu_nFlags_MenuItem_Status;
+    pts->newMenuStatus = stp->simMenuStatus;
 
     // Extract Menu Commands from Flags
-    bool isReset = (stp->Menu_nFlags_MenuItem_Status & MENU_CMD_RESET) != 0;
-    bool isEnable = (stp->Menu_nFlags_MenuItem_Status & MENU_ENABLE) != 0;
+    bool isReset = (stp->simMenuStatus & MenuCmdReset) != 0;
+    bool isEnable = (stp->simMenuStatus & MenuEnable) != 0;
 //    bool isTxON = (stp->Menu_nFlags_MenuItem_Status & MENU_TX) != 0;
 //    bool isRxON = (stp->Menu_nFlags_MenuItem_Status & MENU_RX) != 0;
 
@@ -186,6 +176,6 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
 
     // debug info is shown on the screen
     InfoText(stp, pts);
-    pts->Debug_pucOnScreenInfoText = debugInfo;
-    g_bFirstRun = false;
+    pts->dbgInfoText = debugInfo.toAscii();
+    isFirstRun = FALSE;
 }
