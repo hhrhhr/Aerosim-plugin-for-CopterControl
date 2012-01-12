@@ -17,17 +17,16 @@ b) run:
         Installing
 ---------------------------------------
 
-a) Copy "CopterControl" from build location to simulator's "Plugin" folder.
-b) Copy "lib\*.dll" from source tree to simulator's root folder.
+a) Copy folder "CopterControl" from build location to simulator's "Plugin" folder.
+b) Copy QtCore4.dll, QtNetwork4.dll, libgcc_s_dw2-1.dll and mingwm10.dll from
+   Qt library location to the root folder of simulator.
 
 ---------------------------------------
         Configure plugin
 ---------------------------------------
 
-"CopterControl\cc_plugin.ini"
-
-    remote_host, remote_port - IP address and port of target
-    local_host, local_port   - IP address and port of simulator
+Not implemented yet.
+host - 127.0.0.1, send to port 40100, listen on port 40200
 
 ---------------------------------------
         Tools
