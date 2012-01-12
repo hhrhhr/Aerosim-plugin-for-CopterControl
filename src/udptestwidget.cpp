@@ -121,21 +121,22 @@ void Widget::processDatagram(const QByteArray &data)
 {
     QByteArray buf = data;
     QDataStream stream(&buf, QIODevice::ReadOnly);
+    stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
     // check magic header
     quint32 magic;
     stream >> magic;
     if (magic == 0x4153494D) {  // "AERO"
-        qreal homeX, homeY, homeZ;
-        qreal WpHX, WpHY, WpLat, WpLon;
-        qreal posX, posY, posZ;
-        qreal velX, velY, velZ;
-        qreal angX, angY, angZ;
-        qreal accX, accY, accZ;
-        qreal lat, lon;
-        qreal alt;
-        qreal head, pitch, roll;
-        qreal volt, curr;
+
+        float   homeX, homeY, homeZ,
+                WpHX, WpHY, WpLat, WpLon,
+                posX, posY, posZ,
+                velX, velY, velZ,
+                angX, angY, angZ,
+                accX, accY, accZ,
+                lat, lon, alt,
+                head, pitch, roll,
+                volt, curr;
 
         stream >> homeX >> homeY >> homeZ;
         stream >> WpHX >> WpHY >> WpLat >> WpLon;
@@ -143,8 +144,7 @@ void Widget::processDatagram(const QByteArray &data)
         stream >> velX >> velY >> velZ;
         stream >> angX >> angY >> angZ;
         stream >> accX >> accY >> accZ;
-        stream >> lat >> lon;
-        stream >> alt;
+        stream >> lat >> lon >> alt;
         stream >> head >> pitch >> roll;
         stream >> volt >> curr;
         stream >> packetCounter;
@@ -157,43 +157,54 @@ void Widget::processDatagram(const QByteArray &data)
 
         ui->listWidget->clear();
         ui->listWidget->addItem("home location (m)");
-        ui->listWidget->addItem(QString::number(homeX) + "\t" +
-                                QString::number(homeY) + "\t" +
-                                QString::number(homeZ));
+        ui->listWidget->addItem(QString("%1, %2, %3")
+                                .arg(homeX, 7, 'f', 4)
+                                .arg(homeY, 7, 'f', 4)
+                                .arg(homeZ, 7, 'f', 4));
         ui->listWidget->addItem("home waypoint");
-        ui->listWidget->addItem(QString::number(WpHX) + "m\t" +
-                                QString::number(WpHY) + "m");
-        ui->listWidget->addItem(QString::number(WpLat) + "°\t" +
-                                QString::number(WpLon) + "°");
+        ui->listWidget->addItem(QString("%1, %2, %3, %4")
+                                .arg(WpHX, 7, 'f', 4)
+                                .arg(WpHY, 7, 'f', 4)
+                                .arg(WpLat, 7, 'f', 4)
+                                .arg(WpLon, 7, 'f', 4));
         ui->listWidget->addItem("model position (m)");
-        ui->listWidget->addItem(QString::number(posX) + "\t" +
-                                QString::number(posY) + "\t" +
-                                QString::number(posZ));
+        ui->listWidget->addItem(QString("%1, %2, %3")
+                                .arg(posX, 7, 'f', 4)
+                                .arg(posY, 7, 'f', 4)
+                                .arg(posZ, 7, 'f', 4));
         ui->listWidget->addItem("model velocity (m/s)");
-        ui->listWidget->addItem(QString::number(velX) + "\t" +
-                                QString::number(velY) + "\t" +
-                                QString::number(velZ));
+        ui->listWidget->addItem(QString("%1, %2, %3")
+                                .arg(velX, 7, 'f', 4)
+                                .arg(velY, 7, 'f', 4)
+                                .arg(velZ, 7, 'f', 4));
         ui->listWidget->addItem("model angular velocity (rad/s)");
-        ui->listWidget->addItem(QString::number(angX) + "\t" +
-                                QString::number(angY) + "\t" +
-                                QString::number(angZ));
+        ui->listWidget->addItem(QString("%1, %2, %3")
+                                .arg(angX, 7, 'f', 4)
+                                .arg(angY, 7, 'f', 4)
+                                .arg(angZ, 7, 'f', 4));
         ui->listWidget->addItem("model acceleration (m/s/s)");
-        ui->listWidget->addItem(QString::number(accX) + "\t" +
-                                QString::number(accY) + "\t" +
-                                QString::number(accZ));
-        ui->listWidget->addItem("model coordinates (deg)");
-        ui->listWidget->addItem(QString::number(lat) + "°\t" +
-                                QString::number(lon) + "°\t" +
-                                QString::number(alt) + "m");
+        ui->listWidget->addItem(QString("%1, %2, %3")
+                                .arg(accX, 7, 'f', 4)
+                                .arg(accY, 7, 'f', 4)
+                                .arg(accZ, 7, 'f', 4));
+        ui->listWidget->addItem("model coordinates (deg, deg, m)");
+        ui->listWidget->addItem(QString("%1, %2, %3")
+                                .arg(lat, 7, 'f', 4)
+                                .arg(lon, 7, 'f', 4)
+                                .arg(alt, 7, 'f', 4));
         ui->listWidget->addItem("model attitude (rad)");
-        ui->listWidget->addItem(QString::number(head) + "\t" +
-                                QString::number(pitch) + "\t" +
-                                QString::number(roll));
+        ui->listWidget->addItem(QString("%1, %2, %3")
+                                .arg(head, 7, 'f', 4)
+                                .arg(pitch, 7, 'f', 4)
+                                .arg(roll, 7, 'f', 4));
         ui->listWidget->addItem("model electrics");
-        ui->listWidget->addItem(QString::number(volt) + "V\t" +
-                                QString::number(curr) + "A");
+        ui->listWidget->addItem(QString("%1V, %2A")
+                                .arg(volt, 7, 'f', 4)
+                                .arg(curr, 7, 'f', 4));
         ui->listWidget->addItem("datagram size (bytes), packet counter");
-        ui->listWidget->addItem(QString::number(data.size()) + "\t" + QString::number(packetCounter));
+        ui->listWidget->addItem(QString("%1 %2")
+                                .arg(data.size())
+                                .arg(packetCounter));
 
         screenTimeout.restart();
 
@@ -238,20 +249,22 @@ void Widget::sendDatagram()
     if(!outSocket)
         return;
 
-    qreal ch1, ch2, ch3, ch4, ch5, ch6;
-    qreal coef = 1.0 / 512.0;
+    float ch1, ch2, ch3, ch4, ch5, ch6;
+    float coeff = 1.0 / 512.0;
 
-    ch1 = ui->ch1->value() * coef;
-    ch2 = ui->ch2->value() * coef;
-    ch3 = ui->ch3->value() * coef;
-    ch4 = ui->ch4->value() * coef;
-    ch5 = ui->ch5->value() * coef;
-    ch6 = ui->ch6->value() * coef;
+    ch1 = ui->ch1->value() * coeff;
+    ch2 = ui->ch2->value() * coeff;
+    ch3 = ui->ch3->value() * coeff;
+    ch4 = ui->ch4->value() * coeff;
+    ch5 = ui->ch5->value() * coeff;
+    ch6 = ui->ch6->value() * coeff;
 
     QByteArray data;
-    // 56 - current size of values, 4(quint32) + 6*8(qreal) + 4(quint32)
-    data.resize(56);
+    // 32 - current size of values, 4(quint32) + 6*4(float) + 4(quint32)
+    data.resize(32);
     QDataStream stream(&data, QIODevice::WriteOnly);
+    stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
+
     // magic header, "RCMD"
     stream << quint32(0x52434D44);
     // send channels

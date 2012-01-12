@@ -50,7 +50,7 @@
         </size>
        </property>
        <property name="text">
-        <string notr="true">12345</string>
+        <string notr="true">40100</string>
        </property>
        <property name="maxLength">
         <number>5</number>
@@ -148,7 +148,7 @@
         </size>
        </property>
        <property name="text">
-        <string notr="true">54321</string>
+        <string notr="true">40200</string>
        </property>
        <property name="maxLength">
         <number>5</number>
@@ -189,7 +189,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_1">
       <attribute name="title">
@@ -197,7 +197,13 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QListWidget" name="listWidget"/>
+        <widget class="QListWidget" name="listWidget">
+         <property name="font">
+          <font>
+           <family>Terminal</family>
+          </font>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
