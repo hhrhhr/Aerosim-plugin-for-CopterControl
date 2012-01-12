@@ -1,140 +1,114 @@
 #include "udpconnect.h"
 
-UdpConnect::UdpConnect(QObject *parent) :
-    QObject(parent)
+UdpConnect::UdpConnect(QObject *parent) : QObject(parent)
 {
+    qDebug() << this << "UdpConnect";
     inSocket = NULL;
     outSocket = NULL;
-
-    for (int i = 0; i < 6; ++i) {
-        channel[i] = 0.0;
-    }
 }
 
 UdpConnect::~UdpConnect()
 {
+    qDebug() << this  << "~UdpConnect";
     if(outSocket) {
         delete outSocket;
-//        outSocket = NULL;
     }
     if(inSocket) {
         delete inSocket;
-//        inSocket = NULL;
-    }
-    if(udplog.isOpen()) {
-        udplog.close();
     }
 }
 
-void UdpConnect::setDbgLog(QString &fn)
+void UdpConnect::initSocket(QString &remoteHost, quint16 remotePort,
+                            QString &localHost, quint16 localPort)
 {
-    udplog.setFileName(fn + "/udplog.txt");
-
-/*    if (udplog.exists()) {
-        QFile::remove(fn + "/udplog.bck");
-        udplog.rename(fn + "/udplog.bck");
-        udplog.setFileName(fn + "/udplog.txt");
-    }*/
-
-    if(!udplog.open(QIODevice::WriteOnly | QIODevice::Text))
-        return;
-
-    QTextStream out(&udplog);
-    out << "udplog: init\n";
-}
-
-void UdpConnect::initSocket(QString remoteHost, quint16 remotePort,
-                            QString localHost, quint16 localPort)
-{
-    QTextStream out(&udplog);
-    out << "udplog: initSocket ";
-
-
+    qDebug() << this  << "initSocket" << this->thread();
     inSocket = new QUdpSocket();
-//    connect(inSocket, SIGNAL(connected()), this, SLOT(onConnected()));
-//    connect(inSocket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
-//    connect(inSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(reciveDatagram()));
-//    connect(inSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(reciveDatagram()));
+    qDebug() << this << "inSocket" << inSocket->thread();
+//    connect(inSocket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
+    connect(inSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
+            this,     SLOT(onStateChanged(QAbstractSocket::SocketState)));
+    connect(inSocket, SIGNAL(error(QAbstractSocket::SocketError)),
+            this,     SLOT(onError(QAbstractSocket::SocketError)));
+    inSocket->bind(QHostAddress(localHost), localPort);
 
-    bool ok;
-    ok = QObject::connect(inSocket, SIGNAL(readyRead()), this, SLOT(onReadyRead()), Qt::DirectConnection);
-    if(ok)
-        out << "udplog: signal connected to slot\n";
-    else
-        out << "udplog: signal NOT connected to slot\n";
-
-    if(inSocket->bind(QHostAddress(localHost), localPort)) {
-        out << "ok, host:port - " << localHost << ":" << localPort << "\n";
-    } else {
-        out << "failed: " << inSocket->errorString() << "\n";
-    }
-
-    outSocket = new QUdpSocket();
     outHost = remoteHost;
     outPort = remotePort;
+    outSocket = new QUdpSocket();
+    qDebug() << this << "outSocket" << outSocket->thread();
+    connect(inSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
+            this,     SLOT(onStateChanged(QAbstractSocket::SocketState)));
+    connect(inSocket, SIGNAL(error(QAbstractSocket::SocketError)),
+            this,     SLOT(onError(QAbstractSocket::SocketError)));
 }
 
-void UdpConnect::sendDatagram(QByteArray &data)
+//void UdpConnect::sendDatagram(const QByteArray &data)
+void UdpConnect::sendDatagram(const simToPlugin *stp)
 {
-    if(outSocket->writeDatagram(data, outHost, outPort) == -1) {
-        QTextStream out(&udplog);
-        out << " output socket error: " << outSocket->errorString() << "\n";
-    }
+//    outSocket.writeDatagram(data, outHost, outPort);
+    static quint32 packetCounter = 0;
+    QByteArray data;
+    data.resize(116);
+    QDataStream out(&data, QIODevice::WriteOnly);
+    out.setFloatingPointPrecision(QDataStream::SinglePrecision);
+
+    // magic header, "AERO", 1095977293
+    out << quint32(0x4153494D);
+    // home location
+    out << stp->initPosX << stp->initPosY << stp->initPosZ;
+    out << stp->wpHomeX << stp->wpHomeY << stp->wpHomeLat << stp->wpHomeLong;
+    // position
+    out << stp->posX << stp->posY << stp->posZ;
+    // velocity
+    out << stp->velX << stp->velY << stp->velZ;
+    // angular velocity
+    out << stp->angVelX << stp->angVelY << stp->angVelZ;
+    // acceleration
+    out << stp->accelX << stp->accelY << stp->accelZ;
+    // coordinates
+    out << stp->latitude << stp->longitude;
+    // sonar
+    out << stp->AGL;
+    // attitude
+    out << stp->heading << stp->pitch << stp->roll;
+    // electric
+    out << stp->voltage << stp->current;
+    // packet counter
+    out << packetCounter;
+
+    outSocket->writeDatagram(data, outHost, outPort);
+    ++packetCounter;
 }
 
-void UdpConnect::getDataFromUdp(quint32 &pck)
-{
-//    QTextStream out(&udplog);
-//    out << "!!! " << pck;
-//    for (int i = 0; i < 6; ++i) {
-//        out << QString::number(channel[i], 'f', 2) << ", ";
-//        ch += i * sizeof(qreal);
-//        **ch = channel[i];
-//    }
-//    out << "\n";
-    pck = recvPacketCounter;
-}
-
-void UdpConnect::pushReadyRead()
-{
-    onReadyRead();
-}
 
 /////// private slots
 
-void UdpConnect::onConnected()
+void UdpConnect::onError(QAbstractSocket::SocketError error)
 {
-    QTextStream out(&udplog);
-    out << "onConnected\n";
-    out.flush();
+    qDebug() << this  << error;
 }
-void UdpConnect::onDisconnected()
+void UdpConnect::onStateChanged(QAbstractSocket::SocketState state)
 {
-    QTextStream out(&udplog);
-    out << "onDisconnected\n";
-    out.flush();
+    qDebug() << this  << state;
 }
 
 void UdpConnect::onReadyRead()
 {
-    QTextStream out(&udplog);
-    out << "udplog: <- data\n";
-    out.flush();
+//    qDebug() << this  << "onReadyRead";
 
-//    inSocket->waitForReadyRead(3);
-    while (inSocket->hasPendingDatagrams()) {
-        QByteArray datagram;
-        datagram.resize(inSocket->pendingDatagramSize());
-        quint64 datagramSize;
-        datagramSize = inSocket->readDatagram(datagram.data(), datagram.size());
-        processDatagram(datagram);
-    }
+//    inSocket.waitForReadyRead(3);
+//    while (inSocket.hasPendingDatagrams()) {
+//        QByteArray datagram;
+//        datagram.resize(inSocket.pendingDatagramSize());
+//        quint64 datagramSize;
+//        datagramSize = inSocket.readDatagram(datagram.data(), datagram.size());
+//        processDatagram(datagram);
+//    }
 }
 
 ////// private
 
 void UdpConnect::processDatagram(QByteArray &datagram)
-{
+{/*
     QDataStream stream(datagram);
     // stream.setFloatingPointPrecision();
     // check magic header
@@ -158,4 +132,5 @@ void UdpConnect::processDatagram(QByteArray &datagram)
         QTextStream out(&udplog);
         out << "udplog: wrong magic: " << magic;
     }
+    */
 }

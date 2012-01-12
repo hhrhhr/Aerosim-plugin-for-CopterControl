@@ -3,8 +3,7 @@
 
 #include <QObject>
 #include <QUdpSocket>
-#include <QFile>
-#include <QTextStream>
+#include "datafromaerosim.h"
 
 class UdpConnect : public QObject
 {
@@ -13,29 +12,21 @@ public:
     explicit UdpConnect(QObject *parent = 0);
     ~UdpConnect();
 
-    void setDbgLog(QString &fn);
-    void initSocket(QString remoteHost, quint16 remotePort,
-                    QString localHost, quint16 localPort);
-    void sendDatagram(QByteArray &data);
-    void getDataFromUdp(quint32 &pck);
-    void pushReadyRead();
+    void initSocket(QString &remoteHost, quint16 remotePort,
+                    QString &localHost, quint16 localPort);
+//    void sendDatagram(const QByteArray &data)
+    void sendDatagram(const simToPlugin *stp);
 
 private slots:
+    void onStateChanged(QAbstractSocket::SocketState state);
+    void onError(QAbstractSocket::SocketError error);
     void onReadyRead();
-    void onConnected();
-    void onDisconnected();
 
 private:
-    QFile udplog;
-//    QTextStream dbglog;
-
     QUdpSocket *inSocket;
     QUdpSocket *outSocket;
     QHostAddress outHost;
     quint16 outPort;
-//    QByteArray datagram;
-    qreal channel[6];
-    quint32 recvPacketCounter;
 
     void processDatagram(QByteArray &datagram);
 };

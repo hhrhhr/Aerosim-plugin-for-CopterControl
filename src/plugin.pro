@@ -1,6 +1,6 @@
 !win32 { error("sorry, only win32 supported") }
 
-#QT  += network
+QT  += network
 QT  -= gui
 
 TARGET      = plugin_AeroSIMRC
@@ -19,15 +19,17 @@ HEADERS += \
     datafromaerosim.h \
     datatoaerosim.h \
     plugininit.h \
-    plugin.h
-#    udpconnect.h
+    plugin.h \
+    qdebughandler.h \
+    udpconnect.h
 
 SOURCES += \
-    plugin.cpp
-#    udpconnect.cpp
+    plugin.cpp \
+    qdebughandler.cpp \
+    udpconnect.cpp
 
 # output >>>
 
-DLLDESTDIR = ../CopterControl
-#DLLDESTDIR = e:/sims/AeroSIM-RC/Plugin/CopterControl
+#DLLDESTDIR = ../CopterControl
+DLLDESTDIR = e:/sims/AeroSIM-RC/Plugin/CopterControl
 

@@ -1,8 +1,4 @@
 #include "plugin.h"
-//#include "udpconnect.h"
-
-//#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
-//#include <windows.h>
 
 // Used to initialise menu checkboxes showing OSD with HUD
 bool isFirstRun = TRUE;
@@ -11,67 +7,75 @@ bool isFirstRun = TRUE;
 QString debugInfo;
 QString pluginFolder;
 QString outputFolder;
+UdpConnect *udp;
 
-/*// Qt variable begin
-QFile plglog;
-QTime blueLedTimer;
-int blueLedTimeout = 1000;
-qreal channel[6] = {0,0,0,0,0,0};
-quint32 packetCounter = 0;
-qint32 errors = 0;
-// Qt variable end
-*/
-
-extern "C" int __stdcall DllMain(void * /*hinstDLL*/, quint32 fdwReason, void * /*lpvReserved*/)
+extern "C" int __stdcall DllMain(void *hinstDLL, quint32 fdwReason, void * /*lpvReserved*/)
 {
     switch (fdwReason) {
     case 0: //DLL_PROCESS_DETACH:
         // free resources
-//        delete udp;
+        qDebug() << "DLL_PROCESS_DETACH";
+        delete udp;
         break;
     case 1: //DLL_PROCESS_ATTACH:
+        qInstallMsgHandler(myQDebugHandler);
+        qDebug() << "\n\n" << hinstDLL << " DLL_PROCESS_ATTACH";
         break;
     case 2: //DLL_THREAD_ATTACH:
+        qDebug() << "DLL_THREAD_ATTACH attach";
         break;
     case 3: //DLL_THREAD_DETACH:
+        qDebug() << "DLL_THREAD_DETACH detach";
         break;
     }
     return TRUE;
 }
 
-SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(quint32 *sizeSimToPlugin,
-                                                       quint32 *sizePluginToSim,
-                                                       quint32 *sizePluginInit)
+SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(unsigned long *sizeSimToPlugin,
+                                                       unsigned long *sizePluginToSim,
+                                                       unsigned long *sizePluginInit)
 {
+    qDebug() << "AeroSIMRC_Plugin_ReportStructSizes";
     *sizeSimToPlugin = sizeof(simToPlugin);
     *sizePluginToSim = sizeof(pluginToSim);
     *sizePluginInit  = sizeof(pluginInit);
+    qDebug() << "sizeSimToPlugin = " << *sizeSimToPlugin;
+    qDebug() << "sizePluginToSim = " << *sizePluginToSim;
+    qDebug() << "sizePluginInit  = " << *sizePluginInit;
 }
 
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
 {
+    qDebug() << "AeroSIMRC_Plugin_Init begin";
     debugInfo.reserve(4096);
     pluginFolder.reserve(MAX_PATH);
     outputFolder.reserve(MAX_PATH);
+
     pluginFolder = p->strPluginFolder;
     outputFolder = p->strOutputFolder;
+
+    udp = new UdpConnect();
+    QString host("127.0.0.1");
+    udp->initSocket(host, 40100, host, 40200);
+
+    qDebug() << "AeroSIMRC_Plugin_Init done";
 }
 
 //-----------------------------------------------------------------------------
 
 void Run_Command_Reset(/*const simToPlugin *stp,
-                             pluginToSim *pts*/)
+                               pluginToSim *pts*/)
 {
     // Print some debug info, although it will only be seen during one frame
     debugInfo.append("\nRESET");
 }
 
 void Run_BlinkLEDs(/*const simToPlugin *stp,*/
-                         pluginToSim *pts,
+                           pluginToSim *pts,
                    bool &isEnable)
 {
     if(isEnable) {
-        pts->newMenuStatus |= MenuLedBlue;
+        pts->newMenuStatus |= MenuLedGreen;
     } else {
         pts->newMenuStatus = 0;
     }
@@ -100,6 +104,18 @@ void InfoText(const simToPlugin *stp,
                     "FPVCamTil TX = %45  RX = %46  RCMD TX = %47  RX = %48\n"
                     "\n"
                     "MenuItems = %49\n"
+                    // Model data
+                    "\n"
+                    "fPosX,Y,Z    = (%50, %51, %52)\n"
+                    "fVelX,Y,Z    = (%53, %54, %55)\n"
+                    "fAngVelX,Y,Z = (%56, %57, %58)\n"
+                    "fAccelX,Y,Z  = (%59, %60, %61)\n"
+                    "\n"
+                    "Lat, Long   = %62, %63\n"
+                    "fHeightAboveTerrain = %64\n"
+                    "\n"
+                    "fHeading = %65   fPitch = %66   fRoll = %67\n"
+
                     )
                 .arg(pluginFolder)
                 .arg(outputFolder)
@@ -150,9 +166,26 @@ void InfoText(const simToPlugin *stp,
                 .arg(pts->chNewTX[ChFpvTilt], 5, 'f', 2)
                 .arg(pts->chNewRX[ChFpvTilt], 5, 'f', 2)
                 .arg(stp->simMenuStatus)
+                .arg(stp->posX, 5, 'f', 2)
+                .arg(stp->posY, 5, 'f', 2)
+                .arg(stp->posZ, 5, 'f', 2)
+                .arg(stp->velX, 5, 'f', 2)
+                .arg(stp->velY, 5, 'f', 2)
+                .arg(stp->velZ, 5, 'f', 2)
+                .arg(stp->angVelX, 5, 'f', 2)
+                .arg(stp->angVelY, 5, 'f', 2)
+                .arg(stp->angVelZ, 5, 'f', 2)
+                .arg(stp->accelX, 5, 'f', 2)
+                .arg(stp->accelY, 5, 'f', 2)
+                .arg(stp->accelZ, 5, 'f', 2)
+                .arg(stp->latitude, 5, 'f', 2)
+                .arg(stp->longitude, 5, 'f', 2)
+                .arg(stp->AGL, 5, 'f', 2)
+                .arg(stp->heading, 5, 'f', 2)
+                .arg(stp->pitch, 5, 'f', 2)
+                .arg(stp->roll, 5, 'f', 2)
     );
 }
-
 
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
                                                pluginToSim *pts)
@@ -162,16 +195,27 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
     pts->newMenuStatus = stp->simMenuStatus;
 
     // Extract Menu Commands from Flags
-    bool isReset = (stp->simMenuStatus & MenuCmdReset) != 0;
-    bool isEnable = (stp->simMenuStatus & MenuEnable) != 0;
-//    bool isTxON = (stp->Menu_nFlags_MenuItem_Status & MENU_TX) != 0;
-//    bool isRxON = (stp->Menu_nFlags_MenuItem_Status & MENU_RX) != 0;
+    quint32 status = stp->simMenuStatus;
+    bool isReset  = (status & MenuCmdReset) != 0;
+    bool isEnable = (status & MenuEnable) != 0;
+    bool isTxON   = (status & MenuTx) != 0;
+    bool isRxON   = (status & MenuRx) != 0;
 
     // Run commands
-    if(isReset) {
+    if (isReset) {
         Run_Command_Reset(/*stp, pts*/);
     } else {
         Run_BlinkLEDs(/*stp,*/ pts, isEnable);
+
+        if (isEnable) {
+            if (isTxON) {
+                udp->sendDatagram(stp);
+            }
+            if (isRxON) {
+
+            }
+        }
+
     }
 
     // debug info is shown on the screen
