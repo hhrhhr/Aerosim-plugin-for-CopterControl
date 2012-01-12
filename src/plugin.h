@@ -2,17 +2,9 @@
 #define _plugin_h_
 
 #include <QtCore>
-/*// Qt includes begin
-#include <QByteArray>
-#include <QTime>
-#include <QSettings>
-#include <QFile>
-#include <QTextStream>
-#include <QDebug>
-// Qt includes end
-*/
+#include "qdebughandler.h"
+#include "udpconnect.h"
 
-// Make sure the struct is byte aligned
 // Custom Menu Item masks
 enum MenuMasks {
     MenuCmdReset    = 1 << 0,
@@ -23,9 +15,48 @@ enum MenuMasks {
     MenuLedGreen    = 1 << 5
 };
 
-#pragma pack (push, r1, 1)
+enum Channels {
+    ChAileron,
+    ChElevator,
+    ChThrottle,
+    ChRudder,
+    Ch5,
+    Ch6,
+    Ch7,
+    Ch8,
+    Ch9,
+    ChGear,
+    ChFlaps,
+    ChFpvPan,
+    ChFpvTilt,
+    ChBrakes,
+    ChSpoiler,
+    ChSmoke,
+    ChFire,
+    ChFMode,
+    ChAltHold,
+    ChFpvHold,
+    ChReset,
+    ChMouseTx,
+    ChPlugin1,
+    ChPlugin2,
+    ChThrHold,
+    ChCareFree,
+    Ch27,
+    ChLMotor,
+    ChRMotor,
+    Ch30Mix,
+    Ch31Mix,
+    Ch32Mix,
+    Ch33Mix,
+    Ch34Mix,
+    Ch35Mix,
+    Ch36Mix,
+    Ch37Mix,
+    Ch38Mix,
+    Ch39Mix
+};
 
-#define AEROSIMRC_MAX_CHANNELS 39
 #include "datafromaerosim.h"
 #include "datatoaerosim.h"
 #include "plugininit.h"
@@ -33,9 +64,9 @@ enum MenuMasks {
 #define SIM_DLL_EXPORT extern "C" __declspec(dllexport)
 
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(
-        quint32 *sizeSimToPlugin,
-        quint32 *sizePluginToSim,
-        quint32 *sizePluginInit
+        unsigned long *sizeSimToPlugin,
+        unsigned long *sizePluginToSim,
+        unsigned long *sizePluginInit
         );
 
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(
@@ -46,7 +77,5 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(
         const simToPlugin *stp,
               pluginToSim *pts
         );
-
-#pragma pack (pop, r1)
 
 #endif // _plugin_h_
