@@ -213,37 +213,30 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <widget class="QCheckBox" name="manualSend">
-         <property name="text">
-          <string>auto send</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QRadioButton" name="readCH">
+          <widget class="QRadioButton" name="autoAnswer">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="text">
-            <string notr="true">read channels from simulator</string>
+            <string notr="true">answer on recieve</string>
            </property>
            <property name="checked">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QRadioButton" name="sendCH">
+          <widget class="QRadioButton" name="autoSend">
            <property name="enabled">
             <bool>true</bool>
            </property>
            <property name="text">
-            <string notr="true">send channels to simulator</string>
+            <string notr="true">auto send</string>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>

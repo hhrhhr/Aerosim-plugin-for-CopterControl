@@ -12,20 +12,17 @@ Widget::Widget(QWidget *parent) :
     screenTimeout.start();
     packetCounter = 0;
 
-    manualSend = new QTimer(this);
-    connect(manualSend, SIGNAL(timeout()), this, SLOT(sendDatagram()), Qt::DirectConnection);
+    autoSendTimer = new QTimer(this);
+    connect(autoSendTimer, SIGNAL(timeout()), this, SLOT(sendDatagram()), Qt::DirectConnection);
 }
 
 Widget::~Widget()
 {
-    delete manualSend;
     if(outSocket) {
         delete outSocket;
-        outSocket = NULL;
     }
     if(inSocket) {
         delete inSocket;
-        inSocket = NULL;
     }
     delete ui;
 }
@@ -111,6 +108,8 @@ void Widget::readDatagram()
         Q_UNUSED(datagramSize);
 
         processDatagram(datagram);
+        if (autoSendTimer->isActive())
+            sendDatagram();
     }
 }
 
@@ -208,8 +207,6 @@ void Widget::processDatagram(const QByteArray &data)
         screenTimeout.restart();
 
     } else if(magic == 0x52434D44) { // "RCMD"
-        if(!ui->readCH->isChecked())
-            return;
 
         qreal ch1, ch2, ch3, ch4, ch5, ch6;
         stream >> ch1 >> ch2 >> ch3 >> ch4 >> ch5 >> ch6;
@@ -225,15 +222,6 @@ void Widget::processDatagram(const QByteArray &data)
             ui->listWidget->addItem("CH4: " + QString::number(ch4));
             ui->listWidget->addItem("CH5: " + QString::number(ch5));
             ui->listWidget->addItem("CH6: " + QString::number(ch6));
-        } else if(ui->tabWidget->currentIndex() == 1) {
-            if (screenTimeout.elapsed() < 100)
-                return;
-            ui->ch1->setValue(int(ch1 * 512));
-            ui->ch2->setValue(int(ch2 * 512));
-            ui->ch3->setValue(int(ch3 * 512));
-            ui->ch4->setValue(int(ch4 * 512));
-            ui->ch5->setValue(int(ch5 * 512));
-            ui->ch6->setValue(int(ch6 * 512));
         }
         screenTimeout.restart();
     } else {
@@ -243,8 +231,6 @@ void Widget::processDatagram(const QByteArray &data)
 
 void Widget::sendDatagram()
 {
-    if(!ui->sendCH->isChecked())
-        return;
     if(!outSocket)
         return;
 
@@ -278,10 +264,10 @@ void Widget::sendDatagram()
     }
 }
 
-void Widget::on_manualSend_clicked(bool checked)
+void Widget::on_autoSend_clicked(bool checked)
 {
-    if (checked)
-        manualSend->start(100);
+    if(checked)
+        autoSendTimer->start(100);
     else
-        manualSend->stop();
+        autoSendTimer->stop();
 }

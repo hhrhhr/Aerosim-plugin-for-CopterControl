@@ -28,7 +28,7 @@ private slots:
     void readDatagram();
     void sendDatagram();
 
-    void on_manualSend_clicked(bool checked);
+    void on_autoSend_clicked(bool checked);
 
 private:
     Ui::Widget *ui;
@@ -42,7 +42,7 @@ private:
 
     void processDatagram(const QByteArray &data);
 
-    QTimer *manualSend;
+    QTimer *autoSendTimer;
 };
 
 #endif // WIDGET_H
