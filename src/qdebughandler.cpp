@@ -2,6 +2,7 @@
 
 void myQDebugHandler(QtMsgType type, const char *msg)
 {
+    static bool firstRun = TRUE;
     QString txt;
     switch (type) {
     case QtDebugMsg:
@@ -21,6 +22,10 @@ void myQDebugHandler(QtMsgType type, const char *msg)
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream ts(&outFile);
     QTime time;
+    if (firstRun) {
+        ts << endl << endl;
+        firstRun = FALSE;
+    }
     ts << time.currentTime().toString("hh:mm:ss.zzz") << " " << txt << endl;
 
     if (type == QtFatalMsg)
