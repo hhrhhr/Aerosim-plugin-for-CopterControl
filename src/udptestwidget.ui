@@ -189,7 +189,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_1">
       <attribute name="title">
@@ -213,16 +213,9 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <widget class="QLabel" name="packetCounter">
-         <property name="text">
-          <string>0</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QCheckBox" name="manualSend">
          <property name="text">
-          <string>CheckBox</string>
+          <string>auto send</string>
          </property>
         </widget>
        </item>
@@ -230,6 +223,9 @@
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
           <widget class="QRadioButton" name="readCH">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string notr="true">read channels from simulator</string>
            </property>

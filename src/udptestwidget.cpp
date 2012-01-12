@@ -5,7 +5,6 @@ Widget::Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Widget)
 {
-    qDebug() << "Widget::Widget";
     ui->setupUi(this);
 
     inSocket = NULL;
