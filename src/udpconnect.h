@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QUdpSocket>
-#include "datafromaerosim.h"
+#include "aerosimdatastruct.h"
 
 class UdpConnect : public QObject
 {

@@ -1,9 +1,10 @@
 #include "plugin.h"
+#include "udpconnect.h"
+#include "qdebughandler.h"
+#include "enums.h"
 
-// Used to initialise menu checkboxes showing OSD with HUD
 bool isFirstRun = TRUE;
 
-// static to remain in memory when function exits
 QString debugInfo;
 QString pluginFolder;
 QString outputFolder;
@@ -13,19 +14,19 @@ extern "C" int __stdcall DllMain(void *hinstDLL, quint32 fdwReason, void * /*lpv
 {
     switch (fdwReason) {
     case 0: //DLL_PROCESS_DETACH:
+        qDebug() << hinstDLL << "DLL_PROCESS_DETACH";
         // free resources
-        qDebug() << "DLL_PROCESS_DETACH";
         delete udp;
         break;
     case 1: //DLL_PROCESS_ATTACH:
         qInstallMsgHandler(myQDebugHandler);
-        qDebug() << "\n\n" << hinstDLL << " DLL_PROCESS_ATTACH";
+        qDebug() << hinstDLL << " DLL_PROCESS_ATTACH";
         break;
     case 2: //DLL_THREAD_ATTACH:
-        qDebug() << "DLL_THREAD_ATTACH attach";
+        qDebug() << hinstDLL << "DLL_THREAD_ATTACH";
         break;
     case 3: //DLL_THREAD_DETACH:
-        qDebug() << "DLL_THREAD_DETACH detach";
+        qDebug() << hinstDLL << "DLL_THREAD_DETACH";
         break;
     }
     return TRUE;
@@ -47,9 +48,9 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(unsigned long *sizeSimToP
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
 {
     qDebug() << "AeroSIMRC_Plugin_Init begin";
-    debugInfo.reserve(4096);
-    pluginFolder.reserve(MAX_PATH);
-    outputFolder.reserve(MAX_PATH);
+    debugInfo.reserve(DBG_BUFFER_MAX_SIZE);
+    pluginFolder.reserve(PATH_MAX);
+    outputFolder.reserve(PATH_MAX);
 
     pluginFolder = p->strPluginFolder;
     outputFolder = p->strOutputFolder;

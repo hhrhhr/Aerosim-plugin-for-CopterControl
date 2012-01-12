@@ -108,7 +108,9 @@ void UdpConnect::onReadyRead()
 ////// private
 
 void UdpConnect::processDatagram(QByteArray &datagram)
-{/*
+{
+    Q_UNUSED(datagram);
+    /*
     QDataStream stream(datagram);
     // stream.setFloatingPointPrecision();
     // check magic header
