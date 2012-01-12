@@ -1,17 +1,18 @@
-QT       += core gui network
+QT += core gui network
 
-TARGET   = udp_test
+TARGET = udp_test
 TEMPLATE = app
 
-### input ###
+#input <<<<<<
+SOURCES += \
+    udptestmain.cpp \
+    udptestwidget.cpp
 
-SOURCES += udptestmain.cpp \
-           udptestwidget.cpp
+HEADERS += \
+    udptestwidget.h
 
-HEADERS += udptestwidget.h
+FORMS += \
+    udptestwidget.ui
 
-FORMS   += udptestwidget.ui
-
-### output ###
-
+# output >>>>>>
 DESTDIR = ../tools
