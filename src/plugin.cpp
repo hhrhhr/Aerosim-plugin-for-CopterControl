@@ -49,8 +49,8 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
 {
     qDebug() << "AeroSIMRC_Plugin_Init begin";
     debugInfo.reserve(DBG_BUFFER_MAX_SIZE);
-    pluginFolder.reserve(PATH_MAX);
-    outputFolder.reserve(PATH_MAX);
+    pluginFolder.reserve(MAX_PATH);
+    outputFolder.reserve(MAX_PATH);
 
     pluginFolder = p->strPluginFolder;
     outputFolder = p->strOutputFolder;

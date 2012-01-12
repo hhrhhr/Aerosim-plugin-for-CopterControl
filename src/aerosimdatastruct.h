@@ -13,6 +13,7 @@
 
 #if defined(Q_CC_MSVC)
 #define PACK_STRUCT
+#define MAX_PATH 260
 #pragma pack (push, r1, 1)
 #elif defined(Q_CC_GNU)
 #define PACK_STRUCT __attribute__((packed))
