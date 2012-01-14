@@ -32,9 +32,9 @@ extern "C" int __stdcall DllMain(void *hinstDLL, quint32 fdwReason, void * /*lpv
     return TRUE;
 }
 
-SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(unsigned long *sizeSimToPlugin,
-                                                       unsigned long *sizePluginToSim,
-                                                       unsigned long *sizePluginInit)
+SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(quint32 *sizeSimToPlugin,
+                                                       quint32 *sizePluginToSim,
+                                                       quint32 *sizePluginInit)
 {
     qDebug() << "AeroSIMRC_Plugin_ReportStructSizes";
     *sizeSimToPlugin = sizeof(simToPlugin);

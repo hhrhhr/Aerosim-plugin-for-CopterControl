@@ -21,12 +21,12 @@
 
 struct simToPlugin
 {
-    unsigned short structSize;
+    quint16 structSize;
     float simTimeStep;
     float chSimTX[AEROSIMRC_MAX_CHANNELS];
     float chSimRX[AEROSIMRC_MAX_CHANNELS];
-    unsigned char *OSDVideoBuf;
-    unsigned long simMenuStatus;
+    uchar *OSDVideoBuf;
+    quint32 simMenuStatus;
     float initPosX;
     float initPosY;
     float initPosZ;
@@ -70,8 +70,8 @@ struct simToPlugin
     float accelX;
     float accelY;
     float accelZ;
-    double latitude;
-    double longitude;
+    qreal latitude;
+    qreal longitude;
     float AGL;
     float heading;
     float pitch;
@@ -93,11 +93,11 @@ struct simToPlugin
 
 struct pluginToSim
 {
-    unsigned short structSize;
+    quint16 structSize;
     const char *dbgInfoText;
-    unsigned char chOverTX[AEROSIMRC_MAX_CHANNELS];
+    uchar chOverTX[AEROSIMRC_MAX_CHANNELS];
     float chNewTX[AEROSIMRC_MAX_CHANNELS];
-    unsigned char chOverRX[AEROSIMRC_MAX_CHANNELS];
+    uchar chOverRX[AEROSIMRC_MAX_CHANNELS];
     float chNewRX[AEROSIMRC_MAX_CHANNELS];
     float newPosX;
     float newPosY;
@@ -111,12 +111,12 @@ struct pluginToSim
     float newHeading;
     float newPitch;
     float newRoll;
-    unsigned long modelOverrideFlags;
-    unsigned long newMenuStatus;
-    unsigned char isOSDShow;
-    unsigned char isOSDChanged;
-    unsigned short OSDWindow_DX;
-    unsigned short OSDWindow_DY;
+    quint32 modelOverrideFlags;
+    quint32 newMenuStatus;
+    quint8 isOSDShow;
+    quint8 isOSDChanged;
+    quint16 OSDWindow_DX;
+    quint16 OSDWindow_DY;
     float OSDScale;
     float newWindVelX;
     float newWindVelY;
@@ -129,18 +129,18 @@ struct pluginToSim
     float newCurrent;
     float newConsumedCharge;
     float newFuelConsumed;
-    unsigned char modelCrashInhibit;
+    quint8 modelCrashInhibit;
 } PACK_STRUCT ;     // normal 516, packed 507 OK (3.81)
 
 struct TPluginMenuItem
 {
-    unsigned long OBSOLETE_eType;
+    quint32 OBSOLETE_eType;
     char *OBSOLETE_strName;
 } PACK_STRUCT ;
 
 struct pluginInit
 {
-    unsigned long nStructSize;
+    quint32 nStructSize;
     char *OBSOLETE_strMenuTitle;
     TPluginMenuItem OBSOLETE_atMenuItem[MAX_DLL_USER_MENU_ITEMS];
     const char *strPluginFolder;

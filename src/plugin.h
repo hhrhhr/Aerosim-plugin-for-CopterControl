@@ -7,9 +7,9 @@
 #define SIM_DLL_EXPORT extern "C" __declspec(dllexport)
 
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(
-        unsigned long *sizeSimToPlugin,
-        unsigned long *sizePluginToSim,
-        unsigned long *sizePluginInit
+        quint32 *sizeSimToPlugin,
+        quint32 *sizePluginToSim,
+        quint32 *sizePluginInit
         );
 
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(
