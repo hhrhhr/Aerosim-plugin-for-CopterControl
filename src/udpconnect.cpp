@@ -1,10 +1,16 @@
 #include "udpconnect.h"
+#include "enums.h"
 
 UdpConnect::UdpConnect(QObject *parent) : QObject(parent)
 {
     qDebug() << this << "UdpConnect";
     inSocket = NULL;
     outSocket = NULL;
+    channel     << 0.0       << 0.0        << -1.0       << 0.0      << 0.0      << 0.0;
+    channelMap  << ChAileron << ChElevator << ChThrottle << ChRudder << ChFpvPan << ChFpvTilt;
+    packetsSended = 0;
+    packetsRecived = 0;
+    packetsLost = 0;
 }
 
 UdpConnect::~UdpConnect()
@@ -41,17 +47,14 @@ void UdpConnect::initSocket(QString &remoteHost, quint16 remotePort,
             this,     SLOT(onError(QAbstractSocket::SocketError)));
 }
 
-//void UdpConnect::sendDatagram(const QByteArray &data)
 void UdpConnect::sendDatagram(const simToPlugin *stp)
 {
-//    outSocket.writeDatagram(data, outHost, outPort);
-    static quint32 packetCounter = 0;
     QByteArray data;
     data.resize(116);
     QDataStream out(&data, QIODevice::WriteOnly);
     out.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
-    // magic header, "AERO", 1095977293
+    // magic header, "AERO"
     out << quint32(0x4153494D);
     // home location
     out << stp->initPosX << stp->initPosY << stp->initPosZ;
@@ -73,10 +76,10 @@ void UdpConnect::sendDatagram(const simToPlugin *stp)
     // electric
     out << stp->voltage << stp->current;
     // packet counter
-    out << packetCounter;
+    out << packetsSended;
 
     outSocket->writeDatagram(data, outHost, outPort);
-    ++packetCounter;
+    ++packetsSended;
 }
 
 
@@ -91,48 +94,50 @@ void UdpConnect::onStateChanged(QAbstractSocket::SocketState state)
     qDebug() << this  << state;
 }
 
-void UdpConnect::onReadyRead()
+void UdpConnect::onReadyRead(pluginToSim *pts)
 {
 //    qDebug() << this  << "onReadyRead";
+    if (!inSocket->waitForReadyRead(5))
+        ++packetsLost;
+    while (inSocket->hasPendingDatagrams()) {
+        QByteArray datagram;
+        datagram.resize(inSocket->pendingDatagramSize());
+        quint64 datagramSize;
+        datagramSize = inSocket->readDatagram(datagram.data(), datagram.size());
 
-//    inSocket.waitForReadyRead(3);
-//    while (inSocket.hasPendingDatagrams()) {
-//        QByteArray datagram;
-//        datagram.resize(inSocket.pendingDatagramSize());
-//        quint64 datagramSize;
-//        datagramSize = inSocket.readDatagram(datagram.data(), datagram.size());
-//        processDatagram(datagram);
-//    }
+        processDatagram(datagram);
+
+        for (int i = 0; i < 6; ++i) {
+            pts->chNewTX[channelMap.at(i)] = channel.at(i);
+            pts->chOverTX[channelMap.at(i)] = TRUE;
+        }
+    }
+}
+
+void UdpConnect::getStats(quint32 &s, quint32 &r, quint32 &l)
+{
+    s = packetsSended;
+    r = packetsRecived;
+    l = packetsLost;
 }
 
 ////// private
 
 void UdpConnect::processDatagram(QByteArray &datagram)
 {
-    Q_UNUSED(datagram);
-    /*
     QDataStream stream(datagram);
-    // stream.setFloatingPointPrecision();
+    stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
     // check magic header
     quint32 magic;
     stream >> magic;
-    QTextStream out(&udplog);
-    out << magic << "\n";
-    out.flush();
-    if(magic == 0x52434D44) {  // "RCMD"
+    if (magic == 0x52434D44) {  // "RCMD"
         // read channels
-        stream >> channel[0];
-        stream >> channel[1];
-        stream >> channel[2];
-        stream >> channel[3];
-        stream >> channel[4];
-        stream >> channel[5];
-
+        for (int i = 0; i < 6; ++i) {
+            stream >> channel[i];
+        }
         // read counter
-        stream >> recvPacketCounter;
+        stream >> packetsRecived;
     } else {
-        QTextStream out(&udplog);
-        out << "udplog: wrong magic: " << magic;
+        // wrong magic
     }
-    */
 }

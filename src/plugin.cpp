@@ -49,8 +49,8 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
 {
     qDebug() << "AeroSIMRC_Plugin_Init begin";
     debugInfo.reserve(DBG_BUFFER_MAX_SIZE);
-    pluginFolder.reserve(PATH_MAX);
-    outputFolder.reserve(PATH_MAX);
+    pluginFolder.reserve(MAX_PATH);
+    outputFolder.reserve(MAX_PATH);
 
     pluginFolder = p->strPluginFolder;
     outputFolder = p->strOutputFolder;
@@ -194,31 +194,29 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
     debugInfo = "---\n";
     // By default do not change the Menu Items of type CheckBox
     pts->newMenuStatus = stp->simMenuStatus;
-
     // Extract Menu Commands from Flags
-    quint32 status = stp->simMenuStatus;
-    bool isReset  = (status & MenuCmdReset) != 0;
-    bool isEnable = (status & MenuEnable) != 0;
-    bool isTxON   = (status & MenuTx) != 0;
-    bool isRxON   = (status & MenuRx) != 0;
-
+    bool isReset  = (stp->simMenuStatus & MenuCmdReset) != 0;
+    bool isEnable = (stp->simMenuStatus & MenuEnable) != 0;
+    bool isTxON   = (stp->simMenuStatus & MenuTx) != 0;
+    bool isRxON   = (stp->simMenuStatus & MenuRx) != 0;
     // Run commands
     if (isReset) {
         Run_Command_Reset(/*stp, pts*/);
     } else {
         Run_BlinkLEDs(/*stp,*/ pts, isEnable);
-
         if (isEnable) {
             if (isTxON) {
                 udp->sendDatagram(stp);
             }
             if (isRxON) {
-
+                udp->onReadyRead(pts);
             }
+            quint32 s, r, l;
+            udp->getStats(s, r, l);
+            debugInfo.append(QString("out: %1, inp: %2, delta: %3, lags: %4\n")
+                             .arg(s).arg(r).arg(s - r).arg(l));
         }
-
     }
-
     // debug info is shown on the screen
     InfoText(stp, pts);
     pts->dbgInfoText = debugInfo.toAscii();
