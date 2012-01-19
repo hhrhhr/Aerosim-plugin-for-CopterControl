@@ -28,7 +28,9 @@ private slots:
     void readDatagram();
     void sendDatagram();
 
-    void on_autoSend_clicked(bool checked);
+    void on_autoSend_clicked();
+
+    void on_autoAnswer_clicked();
 
 private:
     Ui::Widget *ui;

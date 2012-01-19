@@ -108,7 +108,7 @@ void Widget::readDatagram()
         Q_UNUSED(datagramSize);
 
         processDatagram(datagram);
-        if (autoSendTimer->isActive())
+        if (ui->autoAnswer->isChecked())
             sendDatagram();
     }
 }
@@ -134,7 +134,8 @@ void Widget::processDatagram(const QByteArray &data)
                 accX, accY, accZ,
                 lat, lon, alt,
                 head, pitch, roll,
-                volt, curr;
+                volt, curr,
+                chAil, chEle, chThr, chRud, chPlg;
 
         stream >> homeX >> homeY >> homeZ;
         stream >> WpHX >> WpHY >> WpLat >> WpLon;
@@ -145,6 +146,7 @@ void Widget::processDatagram(const QByteArray &data)
         stream >> lat >> lon >> alt;
         stream >> head >> pitch >> roll;
         stream >> volt >> curr;
+        stream >> chAil >> chEle >> chThr >> chRud >> chPlg;
         stream >> packetCounter;
 
         if(ui->tabWidget->currentIndex() != 0)
@@ -199,6 +201,13 @@ void Widget::processDatagram(const QByteArray &data)
         ui->listWidget->addItem(QString("%1V, %2A")
                                 .arg(volt, 7, 'f', 4)
                                 .arg(curr, 7, 'f', 4));
+        ui->listWidget->addItem("channels");
+        ui->listWidget->addItem(QString("%1 %2 %3 %4 %5 %6")
+                                .arg(chAil, 6, 'f', 3)
+                                .arg(chEle, 6, 'f', 3)
+                                .arg(chThr, 6, 'f', 3)
+                                .arg(chRud, 6, 'f', 3)
+                                .arg(chPlg, 6, 'f', 3));
         ui->listWidget->addItem("datagram size (bytes), packet counter");
         ui->listWidget->addItem(QString("%1 %2")
                                 .arg(data.size())
@@ -206,7 +215,7 @@ void Widget::processDatagram(const QByteArray &data)
 
         screenTimeout.restart();
 
-    } else if(magic == 0x52434D44) { // "RCMD"
+    } else if (magic == 0x52434D44) { // "RCMD"
 
         qreal ch1, ch2, ch3, ch4, ch5, ch6;
         stream >> ch1 >> ch2 >> ch3 >> ch4 >> ch5 >> ch6;
@@ -264,10 +273,14 @@ void Widget::sendDatagram()
     }
 }
 
-void Widget::on_autoSend_clicked(bool checked)
+void Widget::on_autoSend_clicked()
 {
-    if(checked)
-        autoSendTimer->start(100);
-    else
-        autoSendTimer->stop();
+    autoSendTimer->start(100);
+    qDebug() << "timer start";
+}
+
+void Widget::on_autoAnswer_clicked()
+{
+    autoSendTimer->stop();
+    qDebug() << "timer stop";
 }
