@@ -10,6 +10,9 @@ QString pluginFolder;
 QString outputFolder;
 UdpConnect *udp;
 
+const float RAD2DEG = 180.f / M_PI;
+const float DEG2RAD = M_PI / 180.f;
+
 extern "C" int __stdcall DllMain(void *hinstDLL, quint32 fdwReason, void * /*lpvReserved*/)
 {
     switch (fdwReason) {
@@ -21,6 +24,7 @@ extern "C" int __stdcall DllMain(void *hinstDLL, quint32 fdwReason, void * /*lpv
     case 1: //DLL_PROCESS_ATTACH:
         qInstallMsgHandler(myQDebugHandler);
         qDebug() << hinstDLL << " DLL_PROCESS_ATTACH";
+
         break;
     case 2: //DLL_THREAD_ATTACH:
         qDebug() << hinstDLL << "DLL_THREAD_ATTACH";
@@ -182,9 +186,9 @@ void InfoText(const simToPlugin *stp,
                 .arg(stp->latitude, 5, 'f', 2)
                 .arg(stp->longitude, 5, 'f', 2)
                 .arg(stp->AGL, 5, 'f', 2)
-                .arg(stp->heading, 5, 'f', 2)
-                .arg(stp->pitch, 5, 'f', 2)
-                .arg(stp->roll, 5, 'f', 2)
+                .arg(stp->heading*RAD2DEG, 5, 'f', 2)
+                .arg(stp->pitch*RAD2DEG, 5, 'f', 2)
+                .arg(stp->roll*RAD2DEG, 5, 'f', 2)
     );
 }
 
