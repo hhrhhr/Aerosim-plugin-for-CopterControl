@@ -17,12 +17,14 @@ HEADERS += \
     enums.h \
     plugin.h \
     qdebughandler.h \
-    udpconnect.h
+    udpconnect.h \
+    settings.h
 
 SOURCES += \
     qdebughandler.cpp \
     plugin.cpp \
-    udpconnect.cpp
+    udpconnect.cpp \
+    settings.cpp
 
 # output >>>>>>
 #DLLDESTDIR = ../CopterControl

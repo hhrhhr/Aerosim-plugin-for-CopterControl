@@ -28,7 +28,7 @@ class UdpReciever : public QThread
 {
 //    Q_OBJECT
 public:
-    explicit UdpReciever(QObject *parent = 0);
+    explicit UdpReciever(const QList<quint8> map, bool isOutputToTX, QObject *parent = 0);
     ~UdpReciever();
     void init(const QString &localHost, quint16 localPort);
     void run();
@@ -41,7 +41,8 @@ private:
     volatile bool stopped;
     QUdpSocket *inSocket;
     QList<float> channels;
-    QList<int> channelsMap;
+    QList<quint8> channelsMap;
+    bool outputToTX;
     quint32 packetsRecived;
     void onReadyRead();
     void processDatagram(QByteArray &datagram);

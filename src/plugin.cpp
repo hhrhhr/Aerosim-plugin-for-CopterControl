@@ -2,8 +2,9 @@
 #include "udpconnect.h"
 #include "qdebughandler.h"
 #include "enums.h"
+#include "settings.h"
 
-bool isFirstRun = TRUE;
+bool isFirstRun = true;
 QString debugInfo(DBG_BUFFER_MAX_SIZE, ' ');
 QString pluginFolder(MAX_PATH, ' ');
 QString outputFolder(MAX_PATH, ' ');
@@ -20,13 +21,12 @@ extern "C" int __stdcall DllMain(void*, quint32 fdwReason, void*)
     switch (fdwReason) {
     case 0:
 //        qDebug() << hinstDLL << "DLL_PROCESS_DETACH " << lpvReserved;
-        // free resources here
+// free resources here
         rcvr->stop();
         rcvr->wait(500);
         delete rcvr;
         delete sndr;
         qDebug("------");
-
         break;
     case 1:
 //        qDebug() << hinstDLL << " DLL_PROCESS_ATTACH " << lpvReserved;
@@ -38,7 +38,7 @@ extern "C" int __stdcall DllMain(void*, quint32 fdwReason, void*)
 //        qDebug() << hinstDLL << "DLL_THREAD_DETACH " << lpvReserved;
         break;
     }
-    return TRUE;
+    return true;
 }
 
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(quint32 *sizeSimToPlugin,
@@ -64,17 +64,19 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
     pluginFolder = p->strPluginFolder;
     outputFolder = p->strOutputFolder;
 
-    // TODO: take hosts from ini file
-    QString host("127.0.0.1");
+    Settings *ini = new Settings(pluginFolder);
+    ini->read();
 
     sndr = new UdpSender();
-    sndr->init(host, 40100);
+    sndr->init(ini->remoteHost(), ini->remotePort());
 
-    rcvr = new UdpReciever();
-    rcvr->init(host, 40200);
+    rcvr = new UdpReciever(ini->getMap(), ini->isOutputToTX());
+    rcvr->init(ini->localHost(), ini->localPort());
+
     // run thread
     rcvr->start();
 
+    delete ini;
     qDebug() << "AeroSIMRC_Plugin_Init done";
 }
 
@@ -235,5 +237,5 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
     // debug info is shown on the screen
     InfoText(stp, pts);
     pts->dbgInfoText = debugInfo.toAscii();
-    isFirstRun = FALSE;
+    isFirstRun = false;
 }

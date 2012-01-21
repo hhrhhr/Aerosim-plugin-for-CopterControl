@@ -70,19 +70,20 @@ void UdpSender::sendDatagram(const simToPlugin *stp)
  ***********************************************************************************************
  */
 
-UdpReciever::UdpReciever(QObject *parent) : QThread(parent)
+UdpReciever::UdpReciever(const QList<quint8> map,
+                         bool isOutputToTX,
+                         QObject *parent)
+    : QThread(parent)
 {
     qDebug() << this << "UdpReciever::UdpReciever thread:" << thread();
 
-    stopped = FALSE;
+    stopped = false;
     inSocket = NULL;
-    channels.reserve(10);
     for (int i = 0; i < 10; ++i)
         channels << 0.f;
     channels[2] = -1.f;
-
-    // TODO: channels map must be readed from ini file
-    channelsMap  << ChAileron << ChElevator << ChThrottle << ChRudder << ChFpvPan << ChFpvTilt;
+    channelsMap = map;
+    outputToTX = isOutputToTX;
     packetsRecived = 1;
 }
 
@@ -115,23 +116,34 @@ void UdpReciever::run()
 void UdpReciever::stop()
 {
     qDebug() << this << "UdpReciever::stop";
-    stopped = TRUE;
+    stopped = true;
 }
 
 volatile void UdpReciever::getChannels(pluginToSim *pts)
 {
-    for (int i = 0; i < 6; ++i) {
-        pts->chNewTX[channelsMap.at(i)] = qBound(-1.f, channels.at(i), 1.f);
-        pts->chOverTX[channelsMap.at(i)] = TRUE;
+    float channelValue;
+    for (int i = 0; i < 10; ++i) {
+        channelValue = qBound(-1.f, channels.at(i), 1.f);
+        if (outputToTX) {
+            // connect to simulators transmitter
+            pts->chNewTX[channelsMap.at(i)] = channelValue;
+            pts->chOverTX[channelsMap.at(i)] = true;
+        } else {
+            // direct connect to ESC/motors/ailerons/etc
+            pts->chNewRX[channelsMap.at(i)] = channelValue;
+            pts->chOverRX[channelsMap.at(i)] = true;
+        }
     }
 }
 
 // private
 void UdpReciever::onReadyRead()
 {
-    if (!inSocket->waitForReadyRead(8))
+    if (!inSocket->waitForReadyRead(8)) // 1/60fps ~= 16.7ms, 1/120fps ~= 8.3ms
         return;
-//    qDebug() << this  << "onReadyRead" << inSocket->pendingDatagramSize();
+    // TODO: add failsave
+    // if a command not recieved then slowly return all channel to neutral
+    //
     while (inSocket->hasPendingDatagrams()) {
         QByteArray datagram;
         datagram.resize(inSocket->pendingDatagramSize());
