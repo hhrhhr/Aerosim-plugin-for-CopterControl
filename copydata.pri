@@ -14,5 +14,5 @@ FILES = \
     DEST_DIR_WIN = $${OUT_PWD}/$${CC_DIR}/
     DEST_DIR_WIN ~= s,/,\\,g
     for(file, FILES_WIN) {
-        system(xcopy $${file} $${DEST_DIR_WIN})
+        system(xcopy /y $${file} $${DEST_DIR_WIN})
     }
