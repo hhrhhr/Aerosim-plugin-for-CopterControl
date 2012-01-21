@@ -4,33 +4,38 @@
 #include "enums.h"
 
 bool isFirstRun = TRUE;
+QString debugInfo(DBG_BUFFER_MAX_SIZE, ' ');
+QString pluginFolder(MAX_PATH, ' ');
+QString outputFolder(MAX_PATH, ' ');
 
-QString debugInfo;
-QString pluginFolder;
-QString outputFolder;
-UdpConnect *udp;
+UdpSender *sndr;
+UdpReciever *rcvr;
 
 const float RAD2DEG = 180.f / M_PI;
 const float DEG2RAD = M_PI / 180.f;
 
-extern "C" int __stdcall DllMain(void *hinstDLL, quint32 fdwReason, void * /*lpvReserved*/)
+//extern "C" int __stdcall DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+extern "C" int __stdcall DllMain(void*, quint32 fdwReason, void*)
 {
     switch (fdwReason) {
-    case 0: //DLL_PROCESS_DETACH:
-        qDebug() << hinstDLL << "DLL_PROCESS_DETACH";
-        // free resources
-        delete udp;
-        break;
-    case 1: //DLL_PROCESS_ATTACH:
-        qInstallMsgHandler(myQDebugHandler);
-        qDebug() << hinstDLL << " DLL_PROCESS_ATTACH";
+    case 0:
+//        qDebug() << hinstDLL << "DLL_PROCESS_DETACH " << lpvReserved;
+        // free resources here
+        rcvr->stop();
+        rcvr->wait(500);
+        delete rcvr;
+        delete sndr;
+        qDebug("------");
 
         break;
-    case 2: //DLL_THREAD_ATTACH:
-        qDebug() << hinstDLL << "DLL_THREAD_ATTACH";
+    case 1:
+//        qDebug() << hinstDLL << " DLL_PROCESS_ATTACH " << lpvReserved;
         break;
-    case 3: //DLL_THREAD_DETACH:
-        qDebug() << hinstDLL << "DLL_THREAD_DETACH";
+    case 2:
+//        qDebug() << hinstDLL << "DLL_THREAD_ATTACH " << lpvReserved;
+        break;
+    case 3:
+//        qDebug() << hinstDLL << "DLL_THREAD_DETACH " << lpvReserved;
         break;
     }
     return TRUE;
@@ -40,6 +45,9 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(quint32 *sizeSimToPlugin,
                                                        quint32 *sizePluginToSim,
                                                        quint32 *sizePluginInit)
 {
+    // debug redirection
+    qInstallMsgHandler(myQDebugHandler);
+
     qDebug() << "AeroSIMRC_Plugin_ReportStructSizes";
     *sizeSimToPlugin = sizeof(simToPlugin);
     *sizePluginToSim = sizeof(pluginToSim);
@@ -52,16 +60,20 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(quint32 *sizeSimToPlugin,
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
 {
     qDebug() << "AeroSIMRC_Plugin_Init begin";
-    debugInfo.reserve(DBG_BUFFER_MAX_SIZE);
-    pluginFolder.reserve(MAX_PATH);
-    outputFolder.reserve(MAX_PATH);
 
     pluginFolder = p->strPluginFolder;
     outputFolder = p->strOutputFolder;
 
-    udp = new UdpConnect();
+    // TODO: take hosts from ini file
     QString host("127.0.0.1");
-    udp->initSocket(host, 40100, host, 40200);
+
+    sndr = new UdpSender();
+    sndr->init(host, 40100);
+
+    rcvr = new UdpReciever();
+    rcvr->init(host, 40200);
+    // run thread
+    rcvr->start();
 
     qDebug() << "AeroSIMRC_Plugin_Init done";
 }
@@ -73,17 +85,16 @@ void Run_Command_Reset(/*const simToPlugin *stp,
 {
     // Print some debug info, although it will only be seen during one frame
     debugInfo.append("\nRESET");
+    qDebug() << "stop thread";
+    rcvr->stop();
 }
 
 void Run_BlinkLEDs(/*const simToPlugin *stp,*/
-                           pluginToSim *pts,
-                   bool &isEnable)
+                           pluginToSim *pts)
 {
-    if(isEnable) {
-        pts->newMenuStatus |= MenuLedGreen;
-    } else {
-        pts->newMenuStatus = 0;
-    }
+    pts->newMenuStatus |= MenuLedGreen;
+    if ((rcvr->pcks() & 0x1F) == 0)
+        pts->newMenuStatus ^= MenuLedBlue;
 }
 
 void InfoText(const simToPlugin *stp,
@@ -120,7 +131,6 @@ void InfoText(const simToPlugin *stp,
                     "fHeightAboveTerrain = %64\n"
                     "\n"
                     "fHeading = %65   fPitch = %66   fRoll = %67\n"
-
                     )
                 .arg(pluginFolder)
                 .arg(outputFolder)
@@ -207,20 +217,21 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
     if (isReset) {
         Run_Command_Reset(/*stp, pts*/);
     } else {
-        Run_BlinkLEDs(/*stp,*/ pts, isEnable);
-        if (isEnable) {
-            if (isTxON) {
-                udp->sendDatagram(stp);
-            }
-            if (isRxON) {
-                udp->onReadyRead(pts);
-            }
-            quint32 s, r, l;
-            udp->getStats(s, r, l);
-            debugInfo.append(QString("out: %1, inp: %2, delta: %3, lags: %4\n")
-                             .arg(s).arg(r).arg(s - r).arg(l));
-        }
+        Run_BlinkLEDs(/*stp,*/ pts);
+        if (isEnable) {}
+        if (isTxON)
+            sndr->sendDatagram(stp);
+        if (isRxON)
+            rcvr->getChannels(pts);
+
+        // network lag
+        debugInfo.append(QString("out: %1, inp: %2, delta: %3\n")
+                         .arg(sndr->pcks() - 1)
+                         .arg(rcvr->pcks())
+                         .arg(sndr->pcks() - rcvr->pcks() - 1)
+                         );
     }
+
     // debug info is shown on the screen
     InfoText(stp, pts);
     pts->dbgInfoText = debugInfo.toAscii();
