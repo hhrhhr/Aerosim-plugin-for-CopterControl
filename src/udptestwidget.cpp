@@ -135,7 +135,7 @@ void Widget::processDatagram(const QByteArray &data)
                 lat, lon, alt,
                 head, pitch, roll,
                 volt, curr,
-                chAil, chEle, chThr, chRud, chPlg;
+                chAil, chEle, chThr, chRud, chPlg1, chPlg2;
 
         stream >> homeX >> homeY >> homeZ;
         stream >> WpHX >> WpHY >> WpLat >> WpLon;
@@ -146,7 +146,7 @@ void Widget::processDatagram(const QByteArray &data)
         stream >> lat >> lon >> alt;
         stream >> head >> pitch >> roll;
         stream >> volt >> curr;
-        stream >> chAil >> chEle >> chThr >> chRud >> chPlg;
+        stream >> chAil >> chEle >> chThr >> chRud >> chPlg1 >> chPlg2;
         stream >> packetCounter;
 
         if(ui->tabWidget->currentIndex() != 0)
@@ -207,7 +207,8 @@ void Widget::processDatagram(const QByteArray &data)
                                 .arg(chEle, 6, 'f', 3)
                                 .arg(chThr, 6, 'f', 3)
                                 .arg(chRud, 6, 'f', 3)
-                                .arg(chPlg, 6, 'f', 3));
+                                .arg(chPlg1, 6, 'f', 3)
+                                .arg(chPlg2, 6, 'f', 3));
         ui->listWidget->addItem("datagram size (bytes), packet counter");
         ui->listWidget->addItem(QString("%1 %2")
                                 .arg(data.size())
@@ -243,26 +244,29 @@ void Widget::sendDatagram()
     if(!outSocket)
         return;
 
-    float ch1, ch2, ch3, ch4, ch5, ch6;
+    float ch[10] = {0,0,0,0,0,0,0,0,0,0};
     float coeff = 1.0 / 512.0;
 
-    ch1 = ui->ch1->value() * coeff;
-    ch2 = ui->ch2->value() * coeff;
-    ch3 = ui->ch3->value() * coeff;
-    ch4 = ui->ch4->value() * coeff;
-    ch5 = ui->ch5->value() * coeff;
-    ch6 = ui->ch6->value() * coeff;
+    ch[0] = ui->ch1->value() * coeff;
+    ch[1] = ui->ch2->value() * coeff;
+    ch[2] = ui->ch3->value() * coeff;
+    ch[3] = ui->ch4->value() * coeff;
+    ch[4] = ui->ch5->value() * coeff;
+    ch[5] = ui->ch6->value() * coeff;
+    // ch[6] ... ch[10] = 0
 
     QByteArray data;
-    // 32 - current size of values, 4(quint32) + 6*4(float) + 4(quint32)
-    data.resize(32);
+    // 48 - current size of values, 4(quint32) + 10*4(float) + 4(quint32)
+    data.resize(48);
     QDataStream stream(&data, QIODevice::WriteOnly);
     stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
     // magic header, "RCMD"
     stream << quint32(0x52434D44);
     // send channels
-    stream << ch1 << ch2 << ch3 << ch4 << ch5 << ch6;
+    for (int i = 0; i < 10; ++i) {
+        stream << ch[i];
+    }
     // send readed counter
     stream << packetCounter;
 
