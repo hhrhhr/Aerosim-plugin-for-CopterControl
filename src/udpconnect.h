@@ -6,36 +6,45 @@
 #include <QList>
 #include "aerosimdatastruct.h"
 
-class UdpConnect : public QObject
+class UdpSender : public QObject
 {
-    Q_OBJECT
+//    Q_OBJECT
 public:
-    explicit UdpConnect(QObject *parent = 0);
-    ~UdpConnect();
-
-    void initSocket(QString &remoteHost, quint16 remotePort,
-                    QString &localHost, quint16 localPort);
-//    void sendDatagram(const QByteArray &data)
+    explicit UdpSender(QObject *parent = 0);
+    ~UdpSender();
+    void init(const QString &remoteHost, quint16 remotePort);
     void sendDatagram(const simToPlugin *stp);
-    void onReadyRead(pluginToSim *pts);
-    void getStats (quint32 &s, quint32 &r, quint32 &l);
-
-private slots:
-    void onStateChanged(QAbstractSocket::SocketState state);
-    void onError(QAbstractSocket::SocketError error);
+    quint32 pcks() { return packetsSended; }
 
 private:
-    QUdpSocket *inSocket;
     QUdpSocket *outSocket;
     QHostAddress outHost;
     quint16 outPort;
-
-    void processDatagram(QByteArray &datagram);
-    QList<float> channel;
-    QList<int> channelMap;
     quint32 packetsSended;
+};
+
+
+class UdpReciever : public QThread
+{
+//    Q_OBJECT
+public:
+    explicit UdpReciever(QObject *parent = 0);
+    ~UdpReciever();
+    void init(const QString &localHost, quint16 localPort);
+    void run();
+    void stop();
+    // function getChannels for other threads
+    volatile void getChannels(pluginToSim *pts);
+    quint32 pcks() { return packetsRecived; }
+
+private:
+    volatile bool stopped;
+    QUdpSocket *inSocket;
+    QList<float> channels;
+    QList<int> channelsMap;
     quint32 packetsRecived;
-    quint32 packetsLost;
+    void onReadyRead();
+    void processDatagram(QByteArray &datagram);
 };
 
 #endif // UDPCONNECT_H
