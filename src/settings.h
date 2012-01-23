@@ -17,8 +17,10 @@ public:
     quint16 remotePort() { return sendToPort; }
     QString localHost() { return listenOnHost; }
     quint16 localPort() { return listenOnPort; }
-    QList<quint8> getMap() { return channelsMap; }
-    bool isOutputToTX() { return outputToTX; }
+    QList<quint8> getInputMap() { return inputMap; }
+    QList<quint8> getOutputMap() { return outputMap; }
+    bool isToTX() { return sendToTX; }
+    bool isFromTX() { return takeFromTX; }
 
 private:
     QHash<QString, quint8> channels;
@@ -28,8 +30,10 @@ private:
     quint16 sendToPort;
     QString listenOnHost;
     quint16 listenOnPort;
-    QList<quint8> channelsMap;
-    bool outputToTX;
+    QList<quint8> inputMap;
+    QList<quint8> outputMap;
+    bool sendToTX;
+    bool takeFromTX;
 };
 
 #endif // SETTINGS_H
