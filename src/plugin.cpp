@@ -9,6 +9,8 @@ QString debugInfo(DBG_BUFFER_MAX_SIZE, ' ');
 QString pluginFolder(MAX_PATH, ' ');
 QString outputFolder(MAX_PATH, ' ');
 
+QTime ledTimer;
+
 UdpSender *sndr;
 UdpReciever *rcvr;
 
@@ -64,13 +66,15 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
     pluginFolder = p->strPluginFolder;
     outputFolder = p->strOutputFolder;
 
+    ledTimer.restart();
+
     Settings *ini = new Settings(pluginFolder);
     ini->read();
 
-    sndr = new UdpSender();
+    sndr = new UdpSender(ini->getOutputMap(), ini->isFromTX());
     sndr->init(ini->remoteHost(), ini->remotePort());
 
-    rcvr = new UdpReciever(ini->getMap(), ini->isOutputToTX());
+    rcvr = new UdpReciever(ini->getInputMap(), ini->isToTX());
     rcvr->init(ini->localHost(), ini->localPort());
 
     // run thread
@@ -91,12 +95,36 @@ void Run_Command_Reset(/*const simToPlugin *stp,
     rcvr->stop();
 }
 
-void Run_BlinkLEDs(/*const simToPlugin *stp,*/
-                           pluginToSim *pts)
+void Run_BlinkLEDs(const simToPlugin *stp,
+                         pluginToSim *pts)
 {
-    pts->newMenuStatus |= MenuLedGreen;
-    if ((rcvr->pcks() & 0x1F) == 0)
-        pts->newMenuStatus ^= MenuLedBlue;
+    if ((stp->simMenuStatus & MenuEnable) != 0) {
+        pts->newMenuStatus |= MenuLedGreen;
+        int timeout = 0;
+        if (rcvr->getArmed() == 0)
+            timeout = 1000;
+        else
+            timeout = 100;
+        if (ledTimer.elapsed() > timeout) {
+            ledTimer.restart();
+            pts->newMenuStatus ^= MenuLedBlue;
+        }
+        if (stp->chSimTX[Ch23Plugin1] > 0.33) {
+            pts->newMenuStatus |= MenuFMode3;
+            pts->newMenuStatus &= ~MenuFMode2;
+            pts->newMenuStatus &= ~MenuFMode1;
+        } else if (stp->chSimTX[Ch23Plugin1] > -0.33) {
+            pts->newMenuStatus &= ~MenuFMode3;
+            pts->newMenuStatus |= MenuFMode2;
+            pts->newMenuStatus &= ~MenuFMode1;
+        } else {
+            pts->newMenuStatus &= ~MenuFMode3;
+            pts->newMenuStatus &= ~MenuFMode2;
+            pts->newMenuStatus |= MenuFMode1;
+        }
+    } else {
+        pts->newMenuStatus = 0;
+    }
 }
 
 void InfoText(const simToPlugin *stp,
@@ -138,22 +166,22 @@ void InfoText(const simToPlugin *stp,
                 .arg(outputFolder)
                 .arg(stp->structSize)
                 .arg(1.0 / stp->simTimeStep, 4, 'f', 1)
-                .arg(stp->chSimTX[ChAileron], 5, 'f', 2)
-                .arg(stp->chSimRX[ChAileron], 5, 'f', 2)
-                .arg(pts->chNewTX[ChAileron], 5, 'f', 2)
-                .arg(pts->chNewRX[ChAileron], 5, 'f', 2)
-                .arg(stp->chSimTX[ChElevator], 5, 'f', 2)
-                .arg(stp->chSimRX[ChElevator], 5, 'f', 2)
-                .arg(pts->chNewTX[ChElevator], 5, 'f', 2)
-                .arg(pts->chNewRX[ChElevator], 5, 'f', 2)
-                .arg(stp->chSimTX[ChThrottle], 5, 'f', 2)
-                .arg(stp->chSimRX[ChThrottle], 5, 'f', 2)
-                .arg(pts->chNewTX[ChThrottle], 5, 'f', 2)
-                .arg(pts->chNewRX[ChThrottle], 5, 'f', 2)
-                .arg(stp->chSimTX[ChRudder], 5, 'f', 2)
-                .arg(stp->chSimRX[ChRudder], 5, 'f', 2)
-                .arg(pts->chNewTX[ChRudder], 5, 'f', 2)
-                .arg(pts->chNewRX[ChRudder], 5, 'f', 2)
+                .arg(stp->chSimTX[Ch1Aileron], 5, 'f', 2)
+                .arg(stp->chSimRX[Ch1Aileron], 5, 'f', 2)
+                .arg(pts->chNewTX[Ch1Aileron], 5, 'f', 2)
+                .arg(pts->chNewRX[Ch1Aileron], 5, 'f', 2)
+                .arg(stp->chSimTX[Ch2Elevator], 5, 'f', 2)
+                .arg(stp->chSimRX[Ch2Elevator], 5, 'f', 2)
+                .arg(pts->chNewTX[Ch2Elevator], 5, 'f', 2)
+                .arg(pts->chNewRX[Ch2Elevator], 5, 'f', 2)
+                .arg(stp->chSimTX[Ch3Throttle], 5, 'f', 2)
+                .arg(stp->chSimRX[Ch3Throttle], 5, 'f', 2)
+                .arg(pts->chNewTX[Ch3Throttle], 5, 'f', 2)
+                .arg(pts->chNewRX[Ch3Throttle], 5, 'f', 2)
+                .arg(stp->chSimTX[Ch4Rudder], 5, 'f', 2)
+                .arg(stp->chSimRX[Ch4Rudder], 5, 'f', 2)
+                .arg(pts->chNewTX[Ch4Rudder], 5, 'f', 2)
+                .arg(pts->chNewRX[Ch4Rudder], 5, 'f', 2)
                 .arg(stp->chSimTX[Ch5], 5, 'f', 2)
                 .arg(stp->chSimRX[Ch5], 5, 'f', 2)
                 .arg(pts->chNewTX[Ch5], 5, 'f', 2)
@@ -166,22 +194,22 @@ void InfoText(const simToPlugin *stp,
                 .arg(stp->chSimRX[Ch7], 5, 'f', 2)
                 .arg(pts->chNewTX[Ch7], 5, 'f', 2)
                 .arg(pts->chNewRX[Ch7], 5, 'f', 2)
-                .arg(stp->chSimTX[ChPlugin1], 5, 'f', 2)
-                .arg(stp->chSimRX[ChPlugin1], 5, 'f', 2)
-                .arg(pts->chNewTX[ChPlugin1], 5, 'f', 2)
-                .arg(pts->chNewRX[ChPlugin1], 5, 'f', 2)
-                .arg(stp->chSimTX[ChPlugin2], 5, 'f', 2)
-                .arg(stp->chSimRX[ChPlugin2], 5, 'f', 2)
-                .arg(pts->chNewTX[ChPlugin2], 5, 'f', 2)
-                .arg(pts->chNewRX[ChPlugin2], 5, 'f', 2)
-                .arg(stp->chSimTX[ChFpvPan], 5, 'f', 2)
-                .arg(stp->chSimRX[ChFpvPan], 5, 'f', 2)
-                .arg(pts->chNewTX[ChFpvPan], 5, 'f', 2)
-                .arg(pts->chNewRX[ChFpvPan], 5, 'f', 2)
-                .arg(stp->chSimTX[ChFpvTilt], 5, 'f', 2)
-                .arg(stp->chSimRX[ChFpvTilt], 5, 'f', 2)
-                .arg(pts->chNewTX[ChFpvTilt], 5, 'f', 2)
-                .arg(pts->chNewRX[ChFpvTilt], 5, 'f', 2)
+                .arg(stp->chSimTX[Ch23Plugin1], 5, 'f', 2)
+                .arg(stp->chSimRX[Ch23Plugin1], 5, 'f', 2)
+                .arg(pts->chNewTX[Ch23Plugin1], 5, 'f', 2)
+                .arg(pts->chNewRX[Ch23Plugin1], 5, 'f', 2)
+                .arg(stp->chSimTX[Ch24Plugin2], 5, 'f', 2)
+                .arg(stp->chSimRX[Ch24Plugin2], 5, 'f', 2)
+                .arg(pts->chNewTX[Ch24Plugin2], 5, 'f', 2)
+                .arg(pts->chNewRX[Ch24Plugin2], 5, 'f', 2)
+                .arg(stp->chSimTX[Ch12FPVPan], 5, 'f', 2)
+                .arg(stp->chSimRX[Ch12FPVPan], 5, 'f', 2)
+                .arg(pts->chNewTX[Ch12FPVPan], 5, 'f', 2)
+                .arg(pts->chNewRX[Ch12FPVPan], 5, 'f', 2)
+                .arg(stp->chSimTX[Ch13FPVTilt], 5, 'f', 2)
+                .arg(stp->chSimRX[Ch13FPVTilt], 5, 'f', 2)
+                .arg(pts->chNewTX[Ch13FPVTilt], 5, 'f', 2)
+                .arg(pts->chNewRX[Ch13FPVTilt], 5, 'f', 2)
                 .arg(stp->simMenuStatus)
                 .arg(stp->posX, 5, 'f', 2)
                 .arg(stp->posY, 5, 'f', 2)
@@ -219,12 +247,13 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
     if (isReset) {
         Run_Command_Reset(/*stp, pts*/);
     } else {
-        Run_BlinkLEDs(/*stp,*/ pts);
-        if (isEnable) {}
-        if (isTxON)
-            sndr->sendDatagram(stp);
-        if (isRxON)
-            rcvr->getChannels(pts);
+        Run_BlinkLEDs(stp, pts);
+        if (isEnable) {
+            if (isTxON)
+                sndr->sendDatagram(stp);
+            if (isRxON)
+                rcvr->getChannels(pts);
+        }
 
         // network lag
         debugInfo.append(QString("out: %1, inp: %2, delta: %3\n")
