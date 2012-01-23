@@ -1,10 +1,17 @@
 #include "udpconnect.h"
 #include "enums.h"
 
-UdpSender::UdpSender(QObject *parent) : QObject(parent)
+UdpSender::UdpSender(const QList<quint8> map,
+                     bool isTX,
+                     QObject *parent)
+    : QObject(parent)
 {
     qDebug() << this << "UdpSender::UdpSender thread:" << thread();
     outSocket = NULL;
+    for (int i = 0; i < 8; ++i)
+        channels << 0.f;
+    channelsMap = map;
+    takeFromTX = isTX;
     packetsSended = 1;
 }
 
@@ -27,7 +34,7 @@ void UdpSender::init(const QString &remoteHost, quint16 remotePort)
 void UdpSender::sendDatagram(const simToPlugin *stp)
 {
     QByteArray data;
-    data.resize(140);
+    data.resize(148);
     QDataStream out(&data, QIODevice::WriteOnly);
     out.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
@@ -53,12 +60,18 @@ void UdpSender::sendDatagram(const simToPlugin *stp)
     // electric
     out << stp->voltage     << stp->current;
     // channels
-    out << stp->chSimTX[ChAileron]
-        << stp->chSimTX[ChElevator]
-        << stp->chSimTX[ChThrottle]
-        << stp->chSimTX[ChRudder]
-        << stp->chSimTX[ChPlugin1]
-        << stp->chSimTX[ChPlugin2];
+    for (int i = 0; i < 8; ++i) {
+        quint8 mapTo = channelsMap.at(i);
+        if (mapTo == 255) {
+            out << 0.f;
+        } else if (takeFromTX) {
+            // use values from simulators transmitter
+            out << stp->chSimTX[mapTo];
+        } else {
+            // direct use values from ESC/motors/ailerons/etc
+            out << stp->chSimRX[mapTo];
+        }
+    }
     // packet counter
     out << packetsSended;
 
@@ -71,7 +84,7 @@ void UdpSender::sendDatagram(const simToPlugin *stp)
  */
 
 UdpReciever::UdpReciever(const QList<quint8> map,
-                         bool isOutputToTX,
+                         bool isTX,
                          QObject *parent)
     : QThread(parent)
 {
@@ -81,9 +94,10 @@ UdpReciever::UdpReciever(const QList<quint8> map,
     inSocket = NULL;
     for (int i = 0; i < 10; ++i)
         channels << 0.f;
-    channels[2] = -1.f;
     channelsMap = map;
-    outputToTX = isOutputToTX;
+    sendToTX = isTX;
+    armed = 0;
+    mode = 0;
     packetsRecived = 1;
 }
 
@@ -119,19 +133,22 @@ void UdpReciever::stop()
     stopped = true;
 }
 
-volatile void UdpReciever::getChannels(pluginToSim *pts)
+void UdpReciever::getChannels(pluginToSim *pts)
 {
     float channelValue;
     for (int i = 0; i < 10; ++i) {
-        channelValue = qBound(-1.f, channels.at(i), 1.f);
-        if (outputToTX) {
-            // connect to simulators transmitter
-            pts->chNewTX[channelsMap.at(i)] = channelValue;
-            pts->chOverTX[channelsMap.at(i)] = true;
-        } else {
-            // direct connect to ESC/motors/ailerons/etc
-            pts->chNewRX[channelsMap.at(i)] = channelValue;
-            pts->chOverRX[channelsMap.at(i)] = true;
+        quint8 mapTo = channelsMap.at(i);
+        if (mapTo != 255) {
+            channelValue = qBound(-1.f, channels.at(i), 1.f);
+            if (sendToTX) {
+                // connect to simulators transmitter
+                pts->chNewTX[mapTo] = channelValue;
+                pts->chOverTX[mapTo] = true;
+            } else {
+                // direct connect to ESC/motors/ailerons/etc
+                pts->chNewRX[mapTo] = channelValue;
+                pts->chOverRX[mapTo] = true;
+            }
         }
     }
 }
@@ -166,6 +183,8 @@ void UdpReciever::processDatagram(QByteArray &datagram)
     // read channels
     for (int i = 0; i < 10; ++i)
         stream >> channels[i];
+    // read flight mode
+    stream >> armed >> mode;
     // read counter
     stream >> packetsRecived;
 }
