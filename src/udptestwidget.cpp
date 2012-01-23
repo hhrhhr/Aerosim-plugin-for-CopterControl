@@ -135,7 +135,7 @@ void Widget::processDatagram(const QByteArray &data)
                 lat, lon, alt,
                 head, pitch, roll,
                 volt, curr,
-                chAil, chEle, chThr, chRud, chPlg1, chPlg2;
+                chAil, chEle, chThr, chRud, chPlg1, chPlg2, chFpv1, chFpv2;
 
         stream >> homeX >> homeY >> homeZ;
         stream >> WpHX >> WpHY >> WpLat >> WpLon;
@@ -146,7 +146,7 @@ void Widget::processDatagram(const QByteArray &data)
         stream >> lat >> lon >> alt;
         stream >> head >> pitch >> roll;
         stream >> volt >> curr;
-        stream >> chAil >> chEle >> chThr >> chRud >> chPlg1 >> chPlg2;
+        stream >> chAil >> chEle >> chThr >> chRud >> chPlg1 >> chPlg2 >> chFpv1 >> chFpv2;
         stream >> packetCounter;
 
         if(ui->tabWidget->currentIndex() != 0)
@@ -202,13 +202,15 @@ void Widget::processDatagram(const QByteArray &data)
                                 .arg(volt, 7, 'f', 4)
                                 .arg(curr, 7, 'f', 4));
         ui->listWidget->addItem("channels");
-        ui->listWidget->addItem(QString("%1 %2 %3 %4 %5 %6")
+        ui->listWidget->addItem(QString("%1 %2 %3 %4 %5 %6 %7 %8")
                                 .arg(chAil, 6, 'f', 3)
                                 .arg(chEle, 6, 'f', 3)
                                 .arg(chThr, 6, 'f', 3)
                                 .arg(chRud, 6, 'f', 3)
                                 .arg(chPlg1, 6, 'f', 3)
-                                .arg(chPlg2, 6, 'f', 3));
+                                .arg(chPlg2, 6, 'f', 3)
+                                .arg(chFpv1, 6, 'f', 3)
+                                .arg(chFpv2, 6, 'f', 3));
         ui->listWidget->addItem("datagram size (bytes), packet counter");
         ui->listWidget->addItem(QString("%1 %2")
                                 .arg(data.size())
@@ -218,8 +220,10 @@ void Widget::processDatagram(const QByteArray &data)
 
     } else if (magic == 0x52434D44) { // "RCMD"
 
-        qreal ch1, ch2, ch3, ch4, ch5, ch6;
-        stream >> ch1 >> ch2 >> ch3 >> ch4 >> ch5 >> ch6;
+        qreal ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8, ch9, ch10;
+        stream >> ch1 >> ch2 >> ch3 >> ch4 >> ch5 >> ch6 >> ch7 >> ch8 >> ch9 >> ch10;
+        quint8 armed, mode;
+        stream >> armed >> mode;
 
         if(ui->tabWidget->currentIndex() == 0) {
             if (screenTimeout.elapsed() < 200)
@@ -232,6 +236,12 @@ void Widget::processDatagram(const QByteArray &data)
             ui->listWidget->addItem("CH4: " + QString::number(ch4));
             ui->listWidget->addItem("CH5: " + QString::number(ch5));
             ui->listWidget->addItem("CH6: " + QString::number(ch6));
+            ui->listWidget->addItem("CH7: " + QString::number(ch7));
+            ui->listWidget->addItem("CH8: " + QString::number(ch8));
+            ui->listWidget->addItem("CH9: " + QString::number(ch9));
+            ui->listWidget->addItem("CH10:" + QString::number(ch10));
+            ui->listWidget->addItem("armed:" + QString::number(armed));
+            ui->listWidget->addItem("fmode:" + QString::number(mode));
         }
         screenTimeout.restart();
     } else {
@@ -244,8 +254,8 @@ void Widget::sendDatagram()
     if(!outSocket)
         return;
 
-    float ch[10] = {0,0,0,0,0,0,0,0,0,0};
-    float coeff = 1.0 / 512.0;
+    float ch[10];   // = {0,0,0,0,0,0,0,0,0,0};
+    const float coeff = 1.0 / 512.0;
 
     ch[0] = ui->ch1->value() * coeff;
     ch[1] = ui->ch2->value() * coeff;
@@ -253,11 +263,15 @@ void Widget::sendDatagram()
     ch[3] = ui->ch4->value() * coeff;
     ch[4] = ui->ch5->value() * coeff;
     ch[5] = ui->ch6->value() * coeff;
-    // ch[6] ... ch[10] = 0
+    ch[6] = ui->ch7->value() * coeff;
+    ch[7] = ui->ch8->value() * coeff;
+    ch[8] = ui->ch9->value() * coeff;
+    ch[9] = ui->ch10->value() * coeff;
+
 
     QByteArray data;
-    // 48 - current size of values, 4(quint32) + 10*4(float) + 4(quint32)
-    data.resize(48);
+    // 50 - current size of values, 4(quint32) + 10*4(float) + 2*1(quint8) + 4(quint32)
+    data.resize(50);
     QDataStream stream(&data, QIODevice::WriteOnly);
     stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
@@ -267,6 +281,8 @@ void Widget::sendDatagram()
     for (int i = 0; i < 10; ++i) {
         stream << ch[i];
     }
+    // send armed and mode
+    stream << quint8(2) << quint8(0);
     // send readed counter
     stream << packetCounter;
 

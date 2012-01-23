@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>427</width>
-    <height>400</height>
+    <width>440</width>
+    <height>440</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -258,9 +258,6 @@
            <property name="pageStep">
             <number>32</number>
            </property>
-           <property name="sliderPosition">
-            <number>0</number>
-           </property>
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -286,9 +283,6 @@
            <property name="pageStep">
             <number>32</number>
            </property>
-           <property name="sliderPosition">
-            <number>0</number>
-           </property>
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -313,9 +307,6 @@
            </property>
            <property name="pageStep">
             <number>32</number>
-           </property>
-           <property name="sliderPosition">
-            <number>0</number>
            </property>
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -384,9 +375,6 @@
            <property name="pageStep">
             <number>32</number>
            </property>
-           <property name="sliderPosition">
-            <number>0</number>
-           </property>
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -412,9 +400,6 @@
            <property name="pageStep">
             <number>32</number>
            </property>
-           <property name="sliderPosition">
-            <number>0</number>
-           </property>
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -431,6 +416,12 @@
            <property name="enabled">
             <bool>true</bool>
            </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="minimum">
             <number>-511</number>
            </property>
@@ -442,9 +433,6 @@
            </property>
            <property name="pageStep">
             <number>32</number>
-           </property>
-           <property name="sliderPosition">
-            <number>0</number>
            </property>
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -568,6 +556,174 @@
            </property>
            <property name="text">
             <string notr="true">0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>Ch7</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QSlider" name="ch7">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimum">
+            <number>-511</number>
+           </property>
+           <property name="maximum">
+            <number>512</number>
+           </property>
+           <property name="singleStep">
+            <number>16</number>
+           </property>
+           <property name="pageStep">
+            <number>32</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="tickPosition">
+            <enum>QSlider::TicksAbove</enum>
+           </property>
+           <property name="tickInterval">
+            <number>128</number>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="2">
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_14">
+           <property name="text">
+            <string>Ch8</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QSlider" name="ch8">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimum">
+            <number>-511</number>
+           </property>
+           <property name="maximum">
+            <number>512</number>
+           </property>
+           <property name="singleStep">
+            <number>16</number>
+           </property>
+           <property name="pageStep">
+            <number>32</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="tickPosition">
+            <enum>QSlider::TicksAbove</enum>
+           </property>
+           <property name="tickInterval">
+            <number>128</number>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="2">
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QLabel" name="label_16">
+           <property name="text">
+            <string>Ch9</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0">
+          <widget class="QLabel" name="label_17">
+           <property name="text">
+            <string>Ch10</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QSlider" name="ch9">
+           <property name="minimum">
+            <number>-511</number>
+           </property>
+           <property name="maximum">
+            <number>512</number>
+           </property>
+           <property name="singleStep">
+            <number>16</number>
+           </property>
+           <property name="pageStep">
+            <number>32</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="tickPosition">
+            <enum>QSlider::TicksAbove</enum>
+           </property>
+           <property name="tickInterval">
+            <number>128</number>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QSlider" name="ch10">
+           <property name="minimum">
+            <number>-511</number>
+           </property>
+           <property name="maximum">
+            <number>512</number>
+           </property>
+           <property name="singleStep">
+            <number>16</number>
+           </property>
+           <property name="pageStep">
+            <number>32</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="tickPosition">
+            <enum>QSlider::TicksAbove</enum>
+           </property>
+           <property name="tickInterval">
+            <number>128</number>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="2">
+          <widget class="QLabel" name="label_18">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="2">
+          <widget class="QLabel" name="label_19">
+           <property name="text">
+            <string>0</string>
            </property>
           </widget>
          </item>
