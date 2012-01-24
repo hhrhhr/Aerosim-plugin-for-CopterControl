@@ -135,6 +135,7 @@ void Widget::processDatagram(const QByteArray &data)
                 lat, lon, alt,
                 head, pitch, roll,
                 volt, curr,
+                m11, m12, m13, m21, m22, m23, m31, m32, m33,
                 chAil, chEle, chThr, chRud, chPlg1, chPlg2, chFpv1, chFpv2;
 
         stream >> homeX >> homeY >> homeZ;
@@ -146,6 +147,7 @@ void Widget::processDatagram(const QByteArray &data)
         stream >> lat >> lon >> alt;
         stream >> head >> pitch >> roll;
         stream >> volt >> curr;
+        stream >> m11 >> m12 >> m13 >> m21 >> m22 >> m23 >> m31 >> m32 >> m33;
         stream >> chAil >> chEle >> chThr >> chRud >> chPlg1 >> chPlg2 >> chFpv1 >> chFpv2;
         stream >> packetCounter;
 
@@ -192,15 +194,20 @@ void Widget::processDatagram(const QByteArray &data)
                                 .arg(lat, 7, 'f', 4)
                                 .arg(lon, 7, 'f', 4)
                                 .arg(alt, 7, 'f', 4));
-        ui->listWidget->addItem("model attitude (rad)");
+        ui->listWidget->addItem("model attitude (deg)");
         ui->listWidget->addItem(QString("%1, %2, %3")
-                                .arg(head, 7, 'f', 4)
-                                .arg(pitch, 7, 'f', 4)
-                                .arg(roll, 7, 'f', 4));
+                                .arg(head*RAD2DEG, 7, 'f', 4)
+                                .arg(pitch*RAD2DEG, 7, 'f', 4)
+                                .arg(roll*RAD2DEG, 7, 'f', 4));
         ui->listWidget->addItem("model electrics");
         ui->listWidget->addItem(QString("%1V, %2A")
                                 .arg(volt, 7, 'f', 4)
                                 .arg(curr, 7, 'f', 4));
+        ui->listWidget->addItem("matrix");
+        ui->listWidget->addItem(QString("%1 %2 %3\n%4 %5 %6\n%7 %8 %9")
+                                .arg(m11, 8, 'f', 5).arg(m12, 8, 'f', 5).arg(m13, 8, 'f', 5)
+                                .arg(m21, 8, 'f', 5).arg(m22, 8, 'f', 5).arg(m23, 8, 'f', 5)
+                                .arg(m31, 8, 'f', 5).arg(m32, 8, 'f', 5).arg(m33, 8, 'f', 5));
         ui->listWidget->addItem("channels");
         ui->listWidget->addItem(QString("%1 %2 %3 %4 %5 %6 %7 %8")
                                 .arg(chAil, 6, 'f', 3)

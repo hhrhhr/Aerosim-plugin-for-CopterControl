@@ -11,7 +11,8 @@ enum MenuMasks {
     MenuLedGreen    = (1 << 5),
     MenuFMode1      = (1 << 6),
     MenuFMode2      = (1 << 7),
-    MenuFMode3      = (1 << 8)
+    MenuFMode3      = (1 << 8),
+    MenuScreen      = (1 << 9)
 };
 
 enum EOverrideFlags

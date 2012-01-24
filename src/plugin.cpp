@@ -95,6 +95,54 @@ void Run_Command_Reset(/*const simToPlugin *stp,
     rcvr->stop();
 }
 
+void Run_Command_WindowSizeAndPos(const simToPlugin *stp,
+                                        pluginToSim *pts)
+{
+    static quint8 snSequence = 0;
+    // half size
+    qint16 width = stp->screenW / 2;
+    qint16 height = stp->screenH / 2;
+
+    switch(snSequence) {
+    case 0:     // top left
+        pts->newScreenX = 0;
+        pts->newScreenY = 0;
+        pts->newScreenW = width;
+        pts->newScreenH = height;
+        break;
+    case 1:     // top right
+        pts->newScreenX = width;
+        pts->newScreenY = 0;
+        pts->newScreenW = width;
+        pts->newScreenH = height;
+        break;
+    case 2:     // bottom right
+        pts->newScreenX = width;
+        pts->newScreenY = height;
+        pts->newScreenW = width;
+        pts->newScreenH = height;
+        break;
+    case 3:     // bottom left
+        pts->newScreenX = 0;
+        pts->newScreenY = height;
+        pts->newScreenW = width;
+        pts->newScreenH = height;
+        break;
+    case 4:     // fullscreen
+        pts->newScreenX = 0;
+        pts->newScreenY = 0;
+        pts->newScreenW = stp->screenW;
+        pts->newScreenH = stp->screenH;
+        break;
+    default:    // something wrong
+        qFatal("Run_Command_WindowSizeAndPos switch error");
+    }
+
+    snSequence++;
+    if(snSequence > 4)
+        snSequence = 0;
+}
+
 void Run_BlinkLEDs(const simToPlugin *stp,
                          pluginToSim *pts)
 {
@@ -157,7 +205,7 @@ void InfoText(const simToPlugin *stp,
                     "fAngVelX,Y,Z = (%56, %57, %58)\n"
                     "fAccelX,Y,Z  = (%59, %60, %61)\n"
                     "\n"
-                    "Lat, Long   = %62, %63\n"
+                    "Lat, Long    = %62, %63\n"
                     "fHeightAboveTerrain = %64\n"
                     "\n"
                     "fHeading = %65   fPitch = %66   fRoll = %67\n"
@@ -217,12 +265,12 @@ void InfoText(const simToPlugin *stp,
                 .arg(stp->velX, 5, 'f', 2)
                 .arg(stp->velY, 5, 'f', 2)
                 .arg(stp->velZ, 5, 'f', 2)
-                .arg(stp->angVelX, 5, 'f', 2)
-                .arg(stp->angVelY, 5, 'f', 2)
-                .arg(stp->angVelZ, 5, 'f', 2)
-                .arg(stp->accelX, 5, 'f', 2)
-                .arg(stp->accelY, 5, 'f', 2)
-                .arg(stp->accelZ, 5, 'f', 2)
+                .arg(stp->angVelXm, 5, 'f', 2)
+                .arg(stp->angVelYm, 5, 'f', 2)
+                .arg(stp->angVelZm, 5, 'f', 2)
+                .arg(stp->accelXm, 5, 'f', 2)
+                .arg(stp->accelYm, 5, 'f', 2)
+                .arg(stp->accelZm, 5, 'f', 2)
                 .arg(stp->latitude, 5, 'f', 2)
                 .arg(stp->longitude, 5, 'f', 2)
                 .arg(stp->AGL, 5, 'f', 2)
@@ -243,9 +291,12 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
     bool isEnable = (stp->simMenuStatus & MenuEnable) != 0;
     bool isTxON   = (stp->simMenuStatus & MenuTx) != 0;
     bool isRxON   = (stp->simMenuStatus & MenuRx) != 0;
+    bool isScreen = (stp->simMenuStatus & MenuScreen) != 0;
     // Run commands
     if (isReset) {
         Run_Command_Reset(/*stp, pts*/);
+    } else if (isScreen) {
+        Run_Command_WindowSizeAndPos(stp, pts);
     } else {
         Run_BlinkLEDs(stp, pts);
         if (isEnable) {

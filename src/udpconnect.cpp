@@ -34,7 +34,7 @@ void UdpSender::init(const QString &remoteHost, quint16 remotePort)
 void UdpSender::sendDatagram(const simToPlugin *stp)
 {
     QByteArray data;
-    data.resize(148);
+    data.resize(184);
     QDataStream out(&data, QIODevice::WriteOnly);
     out.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
@@ -45,12 +45,12 @@ void UdpSender::sendDatagram(const simToPlugin *stp)
     out << stp->wpHomeX     << stp->wpHomeY     << stp->wpHomeLat   << stp->wpHomeLong;
     // position
     out << stp->posX        << stp->posY        << stp->posZ;
-    // velocity
+    // velocity (world)
     out << stp->velX        << stp->velY        << stp->velZ;
-    // angular velocity
-    out << stp->angVelX     << stp->angVelY     << stp->angVelZ;
-    // acceleration
-    out << stp->accelX      << stp->accelY      << stp->accelZ;
+    // angular velocity (model)
+    out << stp->angVelXm     << stp->angVelYm     << stp->angVelZm;
+    // acceleration (model)
+    out << stp->accelXm      << stp->accelYm      << stp->accelZm;
     // coordinates
     out << stp->latitude    << stp->longitude;
     // sonar
@@ -59,6 +59,10 @@ void UdpSender::sendDatagram(const simToPlugin *stp)
     out << stp->heading     << stp->pitch       << stp->roll;
     // electric
     out << stp->voltage     << stp->current;
+    // matrix
+    out << stp->axisXx << stp->axisXy << stp->axisXz;
+    out << stp->axisYx << stp->axisYy << stp->axisYz;
+    out << stp->axisZx << stp->axisZy << stp->axisZz;
     // channels
     for (int i = 0; i < 8; ++i) {
         quint8 mapTo = channelsMap.at(i);

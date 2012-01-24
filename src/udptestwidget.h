@@ -4,12 +4,15 @@
 #include <QWidget>
 #include <QUdpSocket>
 #include <QTime>
+#include <qmath.h>
 #include <QDebug>
 #include <QTimer>
 
 namespace Ui {
 class Widget;
 }
+
+const float RAD2DEG = (180.0/M_PI);
 
 class Widget : public QWidget
 {

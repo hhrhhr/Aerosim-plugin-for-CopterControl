@@ -3,8 +3,8 @@
 
 #include <QtCore>
 
-#define AEROSIMRC_MAX_CHANNELS 39
-#define DBG_BUFFER_MAX_SIZE 4096
+const quint8 AEROSIMRC_MAX_CHANNELS=39;
+const quint16 DBG_BUFFER_MAX_SIZE=4096;
 
 #define MAX_DLL_USER_MENU_ITEMS 16
 #define OBSOLETE_MIT_COMMAND    (1 << 0)
@@ -89,7 +89,31 @@ struct simToPlugin
     float capacity;         // Ah
     float fuelConsumed;            // l
     float fuelTankCapacity;        // l
-} PACK_STRUCT ;     // normal - 592 packed - 582 OK (3.81)
+    // ver 3.83
+    qint16 screenW;
+    qint16 screenH;
+    // Model Orientation Matrix (??? X=Right, Y=Front, Z=Up ???)
+    float axisXx;
+    float axisXy;
+    float axisXz;
+    float axisYx;
+    float axisYy;
+    float axisYz;
+    float axisZx;
+    float axisZy;
+    float axisZz;
+    // Model data in body frame coordinates (X=Right, Y=Front, Z=Up)
+    float velXm;    // m/s   Model velocity in body coordinates
+    float velYm;
+    float velZm;
+    float angVelXm; // rad/s Model angular velocity in body coordinates
+    float angVelYm;
+    float angVelZm;
+    float accelXm;  // m/s/s Model acceleration in body coordinates
+    float accelYm;
+    float accelZm;
+} PACK_STRUCT ;     // normal - 592, packed - 582 OK (3.81)
+                    // normal - ???, packed - 658 OK (3.83)
 
 struct pluginToSim
 {
@@ -99,16 +123,16 @@ struct pluginToSim
     float chNewTX[AEROSIMRC_MAX_CHANNELS];
     uchar chOverRX[AEROSIMRC_MAX_CHANNELS];
     float chNewRX[AEROSIMRC_MAX_CHANNELS];
-    float newPosX;
+    float newPosX;      // m
     float newPosY;
     float newPosZ;
-    float newVelX;
+    float newVelX;      // m/s
     float newVelY;
     float newVelZ;
-    float newAngVelX;
+    float newAngVelX;   // rad/s
     float newAngVelY;
     float newAngVelZ;
-    float newHeading;
+    float newHeading;   // rad
     float newPitch;
     float newRoll;
     quint32 modelOverrideFlags;
@@ -130,7 +154,13 @@ struct pluginToSim
     float newConsumedCharge;
     float newFuelConsumed;
     quint8 modelCrashInhibit;
+    // ver 3.83
+    qint16 newScreenW;     // Simulator window position and size on screen
+    qint16 newScreenH;
+    qint16 newScreenX;
+    qint16 newScreenY;
 } PACK_STRUCT ;     // normal 516, packed 507 OK (3.81)
+                    // normal ???, packed 515 OK (3.83)
 
 struct TPluginMenuItem
 {
@@ -145,7 +175,7 @@ struct pluginInit
     TPluginMenuItem OBSOLETE_atMenuItem[MAX_DLL_USER_MENU_ITEMS];
     const char *strPluginFolder;
     const char *strOutputFolder;
-} PACK_STRUCT ;     // normal - 144, packed - 144 OK (3.81)
+} PACK_STRUCT ;     // normal - 144, packed - 144 OK (3.81 & 3.83)
 
 #ifdef Q_CC_MSVC
 #pragma pack (pop, r1)
