@@ -135,7 +135,7 @@ void Widget::processDatagram(const QByteArray &data)
                 lat, lon, alt,
                 head, pitch, roll,
                 volt, curr,
-                m11, m12, m13, m21, m22, m23, m31, m32, m33,
+                rx, ry, rz, fx, fy, fz, ux, uy, uz,
                 chAil, chEle, chThr, chRud, chPlg1, chPlg2, chFpv1, chFpv2;
 
         stream >> homeX >> homeY >> homeZ;
@@ -147,7 +147,7 @@ void Widget::processDatagram(const QByteArray &data)
         stream >> lat >> lon >> alt;
         stream >> head >> pitch >> roll;
         stream >> volt >> curr;
-        stream >> m11 >> m12 >> m13 >> m21 >> m22 >> m23 >> m31 >> m32 >> m33;
+        stream >> rx >> ry >> rz >> fx >> fy >> fz >> ux >> uy >> uz;
         stream >> chAil >> chEle >> chThr >> chRud >> chPlg1 >> chPlg2 >> chFpv1 >> chFpv2;
         stream >> packetCounter;
 
@@ -158,6 +158,7 @@ void Widget::processDatagram(const QByteArray &data)
             return;
 
         ui->listWidget->clear();
+        /*
         ui->listWidget->addItem("home location (m)");
         ui->listWidget->addItem(QString("%1, %2, %3")
                                 .arg(homeX, 7, 'f', 4)
@@ -194,20 +195,10 @@ void Widget::processDatagram(const QByteArray &data)
                                 .arg(lat, 7, 'f', 4)
                                 .arg(lon, 7, 'f', 4)
                                 .arg(alt, 7, 'f', 4));
-        ui->listWidget->addItem("model attitude (deg)");
-        ui->listWidget->addItem(QString("%1, %2, %3")
-                                .arg(head*RAD2DEG, 7, 'f', 4)
-                                .arg(pitch*RAD2DEG, 7, 'f', 4)
-                                .arg(roll*RAD2DEG, 7, 'f', 4));
         ui->listWidget->addItem("model electrics");
         ui->listWidget->addItem(QString("%1V, %2A")
                                 .arg(volt, 7, 'f', 4)
                                 .arg(curr, 7, 'f', 4));
-        ui->listWidget->addItem("matrix");
-        ui->listWidget->addItem(QString("%1 %2 %3\n%4 %5 %6\n%7 %8 %9")
-                                .arg(m11, 8, 'f', 5).arg(m12, 8, 'f', 5).arg(m13, 8, 'f', 5)
-                                .arg(m21, 8, 'f', 5).arg(m22, 8, 'f', 5).arg(m23, 8, 'f', 5)
-                                .arg(m31, 8, 'f', 5).arg(m32, 8, 'f', 5).arg(m33, 8, 'f', 5));
         ui->listWidget->addItem("channels");
         ui->listWidget->addItem(QString("%1 %2 %3 %4 %5 %6 %7 %8")
                                 .arg(chAil, 6, 'f', 3)
@@ -222,6 +213,57 @@ void Widget::processDatagram(const QByteArray &data)
         ui->listWidget->addItem(QString("%1 %2")
                                 .arg(data.size())
                                 .arg(packetCounter));
+*/
+
+        // matrix calculation start
+        QMatrix4x4 m = QMatrix4x4( fy,  fx, -fz,  0.0,
+                                   ry,  rx, -rz,  0.0,
+                                  -uy, -ux,  uz,  0.0,
+                                   0.0, 0.0, 0.0, 1.0);
+        m.optimize();
+
+        QQuaternion q;
+        asMatrix2Quat(m, q);
+
+        QVector3D rpy;
+        asQuat2RPY(q, rpy);
+
+// TODO: check result
+//        QVector3D rpy2;
+//        asQuat2RPY_v2(q, rpy2);
+
+        ui->listWidget->addItem("vectors");
+        ui->listWidget->addItem(QString("       X       Y       Z"));
+        ui->listWidget->addItem(QString("R: %1 %2 %3\nF: %4 %5 %6\nU: %7 %8 %9")
+                                .arg(rx, 8, 'f', 5).arg(ry, 8, 'f', 5).arg(rz, 8, 'f', 5)
+                                .arg(fx, 8, 'f', 5).arg(fy, 8, 'f', 5).arg(fz, 8, 'f', 5)
+                                .arg(ux, 8, 'f', 5).arg(uy, 8, 'f', 5).arg(uz, 8, 'f', 5));
+        ui->listWidget->addItem("CC matrix");
+        ui->listWidget->addItem(QString("   %1 %2 %3\n   %4 %5 %6\n   %7 %8 %9")
+                                .arg(m(0,0), 8, 'f', 5).arg(m(0,1), 8, 'f', 5).arg(m(0,2), 8, 'f', 5)
+                                .arg(m(1,0), 8, 'f', 5).arg(m(1,1), 8, 'f', 5).arg(m(1,2), 8, 'f', 5)
+                                .arg(m(2,0), 8, 'f', 5).arg(m(2,1), 8, 'f', 5).arg(m(2,2), 8, 'f', 5));
+        ui->listWidget->addItem("CC quaternion");
+        ui->listWidget->addItem(QString("%1, %2, %3, %4")
+                                .arg(q.x(), 7, 'f', 4)
+                                .arg(q.y(), 7, 'f', 4)
+                                .arg(q.z(), 7, 'f', 4)
+                                .arg(q.scalar(), 7, 'f', 4));
+        ui->listWidget->addItem("model attitude (deg)");
+        ui->listWidget->addItem(QString("%1, %2, %3")
+                                .arg(roll*RAD2DEG, 7, 'f', 4)
+                                .arg(pitch*RAD2DEG, 7, 'f', 4)
+                                .arg(head*RAD2DEG, 7, 'f', 4));
+        ui->listWidget->addItem("CC attitude calculated (deg)");
+        ui->listWidget->addItem(QString("%1, %2, %3")
+                                .arg(rpy.x(), 7, 'f', 4)
+                                .arg(rpy.y(), 7, 'f', 4)
+                                .arg(rpy.z(), 7, 'f', 4));
+//        ui->listWidget->addItem("CC attitude calculated ver2 (deg)");
+//        ui->listWidget->addItem(QString("%1, %2, %3")
+//                                .arg(rpy2.x(), 7, 'f', 4)
+//                                .arg(rpy2.y(), 7, 'f', 4)
+//                                .arg(rpy2.z(), 7, 'f', 4));
 
         screenTimeout.restart();
 
@@ -311,3 +353,156 @@ void Widget::on_autoAnswer_clicked()
     autoSendTimer->stop();
     qDebug() << "timer stop";
 }
+
+// transfomations
+
+void Widget::asMatrix2Quat(const QMatrix4x4 &M, QQuaternion &q)
+{
+    qreal w, x, y, z;
+
+    // w always >= 0
+    w = qSqrt(qMax(0.0, 1.0 + M(0, 0) + M(1, 1) + M(2, 2))) / 2.0;
+    x = qSqrt(qMax(0.0, 1.0 + M(0, 0) - M(1, 1) - M(2, 2))) / 2.0;
+    y = qSqrt(qMax(0.0, 1.0 - M(0, 0) + M(1, 1) - M(2, 2))) / 2.0;
+    z = qSqrt(qMax(0.0, 1.0 - M(0, 0) - M(1, 1) + M(2, 2))) / 2.0;
+
+    x = copysign(x, (M(1, 2) - M(2, 1)));
+    y = copysign(y, (M(2, 0) - M(0, 2)));
+    z = copysign(z, (M(0, 1) - M(1, 0)));
+
+    q.setScalar(w);
+    q.setX(x);
+    q.setY(y);
+    q.setZ(z);
+}
+
+void Widget::asQuat2RPY(const QQuaternion &q, QVector3D &rpy)
+{
+    const float q0s = q.scalar() * q.scalar();
+    const float q1s = q.x() * q.x();
+    const float q2s = q.y() * q.y();
+    const float q3s = q.z() * q.z();
+
+    float R13, R11, R12, R23, R33;
+    R13 = 2.0 * (q.x() * q.z() - q.scalar() * q.y());
+    R11 = q0s + q1s - q2s - q3s;
+    R12 = 2.0 * (q.x() * q.y() + q.scalar() * q.z());
+    R23 = 2.0 * (q.y() * q.z() + q.scalar() * q.x());
+    R33 = q0s - q1s - q2s + q3s;
+
+    rpy.setX(RAD2DEG * qAtan2(R23, R33));
+    rpy.setY(RAD2DEG * qAsin(-R13));
+    rpy.setZ(RAD2DEG * qAtan2(R12, R11));
+}
+
+/* TODO: check result
+void Widget::asQuat2RPY_v2(const QQuaternion &q, QVector3D &rpy)
+{
+    qreal roll, pitch, yaw;
+    const qreal d2 = 2.0;
+
+    qreal test = d2 * (q.x() * q.y() + q.scalar() * q.z());
+    if (qFabs(test) > 0.998) {
+        // gimbal lock
+        roll = 0.0;
+        pitch = copysign(M_PI_2, test);
+        yaw = d2 * qAtan2(q.x(), q.scalar());
+        yaw = copysign(yaw, test);
+    } else {
+        qreal qxx = q.x() * q.x();
+        qreal qyy = q.y() * q.y();
+        qreal qzz = q.z() * q.z();
+
+        qreal r1 = d2 * (q.x() * q.scalar() - q.y() * q.z());
+        qreal r2 = 1.0 - (d2 * (qxx + qzz));
+
+        qreal y1 = d2 * (q.y() * q.scalar() - q.x() * q.z());
+        qreal y2 = 1.0 - (d2 * (qyy + qzz));
+
+        roll = qAtan2(r1, r2);
+        pitch = qAsin(test);
+        yaw = qAtan2(y1, y2);
+    }
+
+    rpy.setX(roll  * RAD2DEG);
+    rpy.setY(pitch * RAD2DEG);
+    rpy.setZ(yaw   * RAD2DEG);
+}
+*/
+
+/* // not used
+
+void Widget::asMatrix2RPY(const QMatrix4x4 &M, QVector3D &rpy)
+{
+    qreal roll;
+    qreal pitch;
+    qreal yaw;
+
+    if (qFabs(M(0, 2)) > 0.998) { // ~86.3°
+        // gimbal lock
+        roll  = 0.0;
+        pitch = copysign(M_PI_2, -M(0, 2));
+        yaw   = qAtan2(M(0, 2), M(2, 2));
+    } else {
+        roll  = qAtan2(M(1, 2), M(1, 1));
+        pitch = qAsin (-M(0, 2));
+        yaw   = qAtan2(M(0, 1), M(0, 0));
+    }
+
+    rpy.setX(roll  * RAD2DEG);
+    rpy.setY(pitch * RAD2DEG);
+    rpy.setZ(yaw   * RAD2DEG);
+}
+
+void Widget::asRPY2Quat(const QVector3D &rpy, QQuaternion &q)
+{
+    float phi, theta, psi;
+    float cphi, sphi, ctheta, stheta, cpsi, spsi;
+
+    phi    = rpy.x() / 2;
+    theta  = rpy.y() / 2;
+    psi    = rpy.z() / 2;
+    cphi   = cosf(phi);
+    sphi   = sinf(phi);
+    ctheta = cosf(theta);
+    stheta = sinf(theta);
+    cpsi   = cosf(psi);
+    spsi   = sinf(psi);
+
+    q.setScalar(cphi * ctheta * cpsi + sphi * stheta * spsi);
+    q.setX(sphi * ctheta * cpsi - cphi * stheta * spsi);
+    q.setY(cphi * stheta * cpsi + sphi * ctheta * spsi);
+    q.setZ(cphi * ctheta * spsi - sphi * stheta * cpsi);
+
+    if (q.scalar() < 0) {		// q0 always positive for uniqueness
+        q.setScalar(-q.scalar());
+        q.setX(-q.x());
+        q.setY(-q.y());
+        q.setZ(-q.z());
+    }
+}
+
+void Widget::asQuat2Matrix(const QQuaternion &q, QMatrix4x4 &m)
+{
+    float q0s = q.scalar() * q.scalar();
+    float q1s = q.x() * q.x();
+    float q2s = q.y() * q.y();
+    float q3s = q.z() * q.z();
+
+    float m00 = q0s + q1s - q2s - q3s;
+    float m01 = 2 * (q.x() * q.y() + q.scalar() * q.z());
+    float m02 = 2 * (q.x() * q.z() - q.scalar() * q.y());
+    float m10 = 2 * (q.x() * q.y() - q.scalar() * q.z());
+    float m11 = q0s - q1s + q2s - q3s;
+    float m12 = 2 * (q.y() * q.z() + q.scalar() * q.x());
+    float m20 = 2 * (q.x() * q.z() + q.scalar() * q.y());
+    float m21 = 2 * (q.y() * q.z() - q.scalar() * q.x());
+    float m22 = q0s - q1s - q2s + q3s;
+
+    m = QMatrix4x4(m00, m01, m02, 0,
+                   m10, m11, m12, 0,
+                   m20, m21, m22, 0,
+                   0,   0,   0,   1);
+}
+
+*/

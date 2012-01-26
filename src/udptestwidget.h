@@ -5,6 +5,8 @@
 #include <QUdpSocket>
 #include <QTime>
 #include <qmath.h>
+#include <QVector3D>
+#include <QMatrix4x4>
 #include <QDebug>
 #include <QTimer>
 
@@ -13,6 +15,7 @@ class Widget;
 }
 
 const float RAD2DEG = (180.0/M_PI);
+const float DEG2RAD = (M_PI/180.0);
 
 class Widget : public QWidget
 {
@@ -46,8 +49,18 @@ private:
     quint32 packetCounter;
 
     void processDatagram(const QByteArray &data);
-
     QTimer *autoSendTimer;
+
+    void asMatrix2Quat(const QMatrix4x4 &M, QQuaternion &q);
+    void asQuat2RPY(const QQuaternion &q, QVector3D &rpy);
+// TODO: check result
+//    void asQuat2RPY_v2(const QQuaternion &q, QVector3D &rpy);
+
+/*  // not used
+ *  void asRPY2Quat(const QVector3D &rpy, QQuaternion &q);
+ *  void asQuat2Matrix(const QQuaternion &q, QMatrix4x4 &m);
+ *  void asMatrix2RPY(const QMatrix4x4 &M, QVector3D &rpy);
+ */
 };
 
 #endif // WIDGET_H
