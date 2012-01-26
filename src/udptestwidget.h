@@ -51,15 +51,13 @@ private:
     void processDatagram(const QByteArray &data);
     QTimer *autoSendTimer;
 
-    void asMatrix2Quat(const QMatrix4x4 &M, QQuaternion &q);
+    void asMatrix2Quat(const QMatrix4x4 &m, QQuaternion &q);
+    void asMatrix2RPY(const QMatrix4x4 &m, QVector3D &rpy);
     void asQuat2RPY(const QQuaternion &q, QVector3D &rpy);
-// TODO: check result
-//    void asQuat2RPY_v2(const QQuaternion &q, QVector3D &rpy);
 
 /*  // not used
- *  void asRPY2Quat(const QVector3D &rpy, QQuaternion &q);
- *  void asQuat2Matrix(const QQuaternion &q, QMatrix4x4 &m);
- *  void asMatrix2RPY(const QMatrix4x4 &M, QVector3D &rpy);
+ *  void ccRPY2Quat(const QVector3D &rpy, QQuaternion &q);
+ *  void ccQuat2Matrix(const QQuaternion &q, QMatrix4x4 &m);
  */
 };
 
