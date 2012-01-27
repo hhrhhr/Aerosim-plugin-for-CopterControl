@@ -69,3 +69,9 @@ Plugin for connect CopterControl board to the simulator"
 .MENU_ITEM_08_MOUSE_RECT_DXDY   35 35
 .MENU_ITEM_08_HIDE_MENU_ITEM    1
 
+.MENU_ITEM_09_NAME              "Change window size&pos"
+.MENU_ITEM_09_TYPE              COMMAND
+.MENU_ITEM_09_HAS_SEPARATOR     1
+.MENU_ITEM_09_MOUSE_RECT_XY     0 0
+.MENU_ITEM_09_MOUSE_RECT_DXDY   0 0
+.MENU_ITEM_09_HIDE_MENU_ITEM    0
