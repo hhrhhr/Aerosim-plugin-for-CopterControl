@@ -157,18 +157,22 @@ void Run_BlinkLEDs(const simToPlugin *stp,
             ledTimer.restart();
             pts->newMenuStatus ^= MenuLedBlue;
         }
-        if (stp->chSimTX[Ch23Plugin1] > 0.33) {
+        if (rcvr->getMode() == 2) {
             pts->newMenuStatus |= MenuFMode3;
             pts->newMenuStatus &= ~MenuFMode2;
             pts->newMenuStatus &= ~MenuFMode1;
-        } else if (stp->chSimTX[Ch23Plugin1] > -0.33) {
+        } else if (rcvr->getMode() == 1) {
             pts->newMenuStatus &= ~MenuFMode3;
             pts->newMenuStatus |= MenuFMode2;
             pts->newMenuStatus &= ~MenuFMode1;
-        } else {
+        } else if (rcvr->getMode() == 0) {
             pts->newMenuStatus &= ~MenuFMode3;
             pts->newMenuStatus &= ~MenuFMode2;
             pts->newMenuStatus |= MenuFMode1;
+        } else {
+            pts->newMenuStatus &= ~MenuFMode3;
+            pts->newMenuStatus &= ~MenuFMode2;
+            pts->newMenuStatus &= ~MenuFMode1;
         }
     } else {
         pts->newMenuStatus = 0;
@@ -303,7 +307,7 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
             if (isTxON)
                 sndr->sendDatagram(stp);
             if (isRxON)
-                rcvr->getChannels(pts);
+                rcvr->setChannels(pts);
         }
 
         // network lag
