@@ -37,7 +37,7 @@ public:
     void run();
     void stop();
     // function getChannels for other threads
-    void getChannels(pluginToSim *pts);
+    void setChannels(pluginToSim *pts);
     quint8 getArmed() { return armed; }
     quint8 getMode() { return mode; }
     quint32 pcks() { return packetsRecived; }

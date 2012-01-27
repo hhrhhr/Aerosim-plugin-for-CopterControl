@@ -9,7 +9,7 @@ UdpSender::UdpSender(const QList<quint8> map,
     qDebug() << this << "UdpSender::UdpSender thread:" << thread();
     outSocket = NULL;
     for (int i = 0; i < 8; ++i)
-        channels << 0.f;
+        channels << 0.0;
     channelsMap = map;
     takeFromTX = isTX;
     packetsSended = 1;
@@ -48,9 +48,9 @@ void UdpSender::sendDatagram(const simToPlugin *stp)
     // velocity (world)
     out << stp->velX        << stp->velY        << stp->velZ;
     // angular velocity (model)
-    out << stp->angVelXm     << stp->angVelYm     << stp->angVelZm;
+    out << stp->angVelXm    << stp->angVelYm    << stp->angVelZm;
     // acceleration (model)
-    out << stp->accelXm      << stp->accelYm      << stp->accelZm;
+    out << stp->accelXm     << stp->accelYm     << stp->accelZm;
     // coordinates
     out << stp->latitude    << stp->longitude;
     // sonar
@@ -67,7 +67,7 @@ void UdpSender::sendDatagram(const simToPlugin *stp)
     for (int i = 0; i < 8; ++i) {
         quint8 mapTo = channelsMap.at(i);
         if (mapTo == 255) {
-            out << 0.f;
+            out << 0.0;
         } else if (takeFromTX) {
             // use values from simulators transmitter
             out << stp->chSimTX[mapTo];
@@ -97,7 +97,7 @@ UdpReciever::UdpReciever(const QList<quint8> map,
     stopped = false;
     inSocket = NULL;
     for (int i = 0; i < 10; ++i)
-        channels << 0.f;
+        channels << 0.0;
     channelsMap = map;
     sendToTX = isTX;
     armed = 0;
@@ -137,13 +137,13 @@ void UdpReciever::stop()
     stopped = true;
 }
 
-void UdpReciever::getChannels(pluginToSim *pts)
+void UdpReciever::setChannels(pluginToSim *pts)
 {
     float channelValue;
     for (int i = 0; i < 10; ++i) {
         quint8 mapTo = channelsMap.at(i);
         if (mapTo != 255) {
-            channelValue = qBound(-1.f, channels.at(i), 1.f);
+            channelValue = qBound(-1.0f, channels.at(i), 1.0f);
             if (sendToTX) {
                 // connect to simulators transmitter
                 pts->chNewTX[mapTo] = channelValue;
