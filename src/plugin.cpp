@@ -141,6 +141,48 @@ void Run_Command_WindowSizeAndPos(const simToPlugin *stp,
         snSequence = 0;
 }
 
+void Run_Command_MoveToNextWaypoint(const simToPlugin *stp,
+                                    pluginToSim *pts)
+{
+    static quint8 snSequence = 0;
+
+    switch(snSequence) {
+    case 0:
+        pts->newPosX = stp->wpAX;
+        pts->newPosY = stp->wpAY;
+        pts->newPosZ = 100.0;
+        break;
+    case 1:
+        pts->newPosX = stp->wpBX;
+        pts->newPosY = stp->wpBY;
+        pts->newPosZ = 100.0;
+        break;
+    case 2:
+        pts->newPosX = stp->wpCX;
+        pts->newPosY = stp->wpCY;
+        pts->newPosZ = 100.0;
+        break;
+    case 3:
+        pts->newPosX = stp->wpDX;
+        pts->newPosY = stp->wpDY;
+        pts->newPosZ = 100.0;
+        break;
+    case 4:
+        pts->newPosX = stp->wpHomeX;
+        pts->newPosY = stp->wpHomeY;
+        pts->newPosZ = 100.0;
+        break;
+    default:
+        qFatal("Run_Command_MoveToNextWaypoint switch error");
+    }
+    pts->modelOverrideFlags = 0;
+    pts->modelOverrideFlags |= OVR_POS;
+
+    snSequence++;
+    if(snSequence > 4)
+        snSequence = 0;
+}
+
 void Run_BlinkLEDs(const simToPlugin *stp,
                          pluginToSim *pts)
 {
@@ -311,11 +353,14 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
     bool isTxON   = (stp->simMenuStatus & MenuTx) != 0;
     bool isRxON   = (stp->simMenuStatus & MenuRx) != 0;
     bool isScreen = (stp->simMenuStatus & MenuScreen) != 0;
+    bool isNextWp = (stp->simMenuStatus & MenuNextWpt) != 0;
     // Run commands
     if (isReset) {
         Run_Command_Reset(/*stp, pts*/);
     } else if (isScreen) {
         Run_Command_WindowSizeAndPos(stp, pts);
+    } else if (isNextWp) {
+        Run_Command_MoveToNextWaypoint(stp, pts);
     } else {
         Run_BlinkLEDs(stp, pts);
         if (isEnable) {

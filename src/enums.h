@@ -12,7 +12,8 @@ enum MenuMasks {
     MenuFMode1      = (1 << 6),
     MenuFMode2      = (1 << 7),
     MenuFMode3      = (1 << 8),
-    MenuScreen      = (1 << 9)
+    MenuScreen      = (1 << 9),
+    MenuNextWpt     = (1 << 10)
 };
 
 enum EOverrideFlags
