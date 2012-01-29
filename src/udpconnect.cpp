@@ -12,7 +12,7 @@ UdpSender::UdpSender(const QList<quint8> map,
         channels << 0.0;
     channelsMap = map;
     takeFromTX = isTX;
-    packetsSended = 1;
+    packetsSended = 0;
 }
 
 UdpSender::~UdpSender()
@@ -66,16 +66,14 @@ void UdpSender::sendDatagram(const simToPlugin *stp)
     // channels
     for (int i = 0; i < 8; ++i) {
         quint8 mapTo = channelsMap.at(i);
-        if (mapTo == 255) {
+        if (mapTo == 255)       // unused channel
             out << 0.0;
-        } else if (takeFromTX) {
-            // use values from simulators transmitter
+        else if (takeFromTX)    // use values from simulators transmitter
             out << stp->chSimTX[mapTo];
-        } else {
-            // direct use values from ESC/motors/ailerons/etc
+        else                    // direct use values from ESC/motors/ailerons/etc
             out << stp->chSimRX[mapTo];
-        }
     }
+
     // packet counter
     out << packetsSended;
 
@@ -139,11 +137,10 @@ void UdpReciever::stop()
 
 void UdpReciever::setChannels(pluginToSim *pts)
 {
-    float channelValue;
     for (int i = 0; i < 10; ++i) {
         quint8 mapTo = channelsMap.at(i);
         if (mapTo != 255) {
-            channelValue = qBound(-1.0f, channels.at(i), 1.0f);
+            float channelValue = qBound(-1.0f, channels.at(i), 1.0f);
             if (sendToTX) {
                 // connect to simulators transmitter
                 pts->chNewTX[mapTo] = channelValue;

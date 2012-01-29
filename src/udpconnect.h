@@ -49,7 +49,7 @@ private:
     QList<quint8> channelsMap;
     bool sendToTX;
     quint8 armed;
-    quint8 mode;    // not used
+    quint8 mode;
     quint32 packetsRecived;
     void onReadyRead();
     void processDatagram(QByteArray &datagram);

@@ -74,7 +74,7 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
     sndr = new UdpSender(ini->getOutputMap(), ini->isFromTX());
     sndr->init(ini->remoteHost(), ini->remotePort());
 
-    rcvr = new UdpReciever(ini->getInputMap(), ini->isToTX());
+    rcvr = new UdpReciever(ini->getInputMap(), ini->isToRX());
     rcvr->init(ini->localHost(), ini->localPort());
 
     // run thread
@@ -91,8 +91,6 @@ void Run_Command_Reset(/*const simToPlugin *stp,
 {
     // Print some debug info, although it will only be seen during one frame
     debugInfo.append("\nRESET");
-    qDebug() << "stop thread";
-    rcvr->stop();
 }
 
 void Run_Command_WindowSizeAndPos(const simToPlugin *stp,
@@ -148,24 +146,41 @@ void Run_BlinkLEDs(const simToPlugin *stp,
 {
     if ((stp->simMenuStatus & MenuEnable) != 0) {
         pts->newMenuStatus |= MenuLedGreen;
-        int timeout = 0;
+        int timeout;
         if (rcvr->getArmed() == 0)
             timeout = 1000;
-        else
+        else if (rcvr->getArmed() == 1)
+            timeout = 33;
+        else if (rcvr->getArmed() == 2)
             timeout = 100;
+        else
+            timeout = 2000;
         if (ledTimer.elapsed() > timeout) {
             ledTimer.restart();
             pts->newMenuStatus ^= MenuLedBlue;
         }
-        if (rcvr->getMode() == 2) {
+        quint8 mode = rcvr->getMode();
+        if (mode == 4) {
+            pts->newMenuStatus |= MenuFMode3;
+            pts->newMenuStatus |= MenuFMode2;
+            pts->newMenuStatus |= MenuFMode1;
+        } else if (mode == 4) {
+            pts->newMenuStatus |= MenuFMode3;
+            pts->newMenuStatus |= MenuFMode2;
+            pts->newMenuStatus &= ~MenuFMode1;
+        } else if (mode == 3) {
+            pts->newMenuStatus |= MenuFMode3;
+            pts->newMenuStatus &= ~MenuFMode2;
+            pts->newMenuStatus |= MenuFMode1;
+        } else if (mode == 2) {
             pts->newMenuStatus |= MenuFMode3;
             pts->newMenuStatus &= ~MenuFMode2;
             pts->newMenuStatus &= ~MenuFMode1;
-        } else if (rcvr->getMode() == 1) {
+        } else if (mode == 1) {
             pts->newMenuStatus &= ~MenuFMode3;
             pts->newMenuStatus |= MenuFMode2;
             pts->newMenuStatus &= ~MenuFMode1;
-        } else if (rcvr->getMode() == 0) {
+        } else if (mode == 0) {
             pts->newMenuStatus &= ~MenuFMode3;
             pts->newMenuStatus &= ~MenuFMode2;
             pts->newMenuStatus |= MenuFMode1;
