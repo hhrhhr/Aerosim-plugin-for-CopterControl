@@ -4,6 +4,7 @@ Settings::Settings(QString settingsPath, QObject *parent) :
     QObject(parent)
 {
    settings = new QSettings(settingsPath + "/cc_plugin.ini", QSettings::IniFormat);
+   // default settings
    sendToHost = "127.0.0.1";
    sendToPort = 40100;
    listenOnHost = "127.0.0.1";
@@ -13,7 +14,7 @@ Settings::Settings(QString settingsPath, QObject *parent) :
        inputMap << 255;
    for (quint8 i = 0; i < 8; ++i)
        outputMap << 255;
-   sendToTX = false;
+   sendToRX = true;
    takeFromTX = true;
 }
 
@@ -40,8 +41,8 @@ void Settings::read()
         inputMap[i] = channels.value(map, inputMap.at(i));
     }
 
-    QString sendTo = settings->value("Input/send_to", "TX").toString();
-    sendToTX = (sendTo == "TX") ? true : false;
+    QString sendTo = settings->value("Input/send_to", "RX").toString();
+    sendToRX = (sendTo == "RX") ? true : false;
 
     // outputs
     for (quint8 i = 0; i < 8; ++i) {

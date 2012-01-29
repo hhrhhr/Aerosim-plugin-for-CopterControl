@@ -19,7 +19,7 @@ public:
     quint16 localPort() { return listenOnPort; }
     QList<quint8> getInputMap() { return inputMap; }
     QList<quint8> getOutputMap() { return outputMap; }
-    bool isToTX() { return sendToTX; }
+    bool isToRX() { return sendToRX; }
     bool isFromTX() { return takeFromTX; }
 
 private:
@@ -32,7 +32,7 @@ private:
     quint16 listenOnPort;
     QList<quint8> inputMap;
     QList<quint8> outputMap;
-    bool sendToTX;
+    bool sendToRX;
     bool takeFromTX;
 };
 
