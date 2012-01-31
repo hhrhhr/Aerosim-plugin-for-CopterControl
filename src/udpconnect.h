@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <QList>
+#include <QTime>
 #include "aerosimdatastruct.h"
 
 class UdpSender : public QObject
@@ -31,13 +32,14 @@ class UdpReciever : public QThread
 {
 //    Q_OBJECT
 public:
-    explicit UdpReciever(const QList<quint8> map, bool isTX, QObject *parent = 0);
+    explicit UdpReciever(const QList<quint8> map, bool isRX, QObject *parent = 0);
     ~UdpReciever();
     void init(const QString &localHost, quint16 localPort);
     void run();
     void stop();
     // function getChannels for other threads
     void setChannels(pluginToSim *pts);
+    void getFlighStatus(quint8 &arm, quint8 &mod) { arm = armed; mod = mode; }
     quint8 getArmed() { return armed; }
     quint8 getMode() { return mode; }
     quint32 pcks() { return packetsRecived; }
@@ -47,7 +49,7 @@ private:
     QUdpSocket *inSocket;
     QList<float> channels;
     QList<quint8> channelsMap;
-    bool sendToTX;
+    bool sendToRX;
     quint8 armed;
     quint8 mode;
     quint32 packetsRecived;

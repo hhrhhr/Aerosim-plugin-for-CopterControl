@@ -81,6 +81,7 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
     rcvr->start();
 
     delete ini;
+
     qDebug() << "AeroSIMRC_Plugin_Init done";
 }
 
@@ -132,12 +133,18 @@ void Run_Command_WindowSizeAndPos(const simToPlugin *stp,
         pts->newScreenW = stp->screenW;
         pts->newScreenH = stp->screenH;
         break;
+    case 5:     // 640*720
+        pts->newScreenX = 50;
+        pts->newScreenY = 50;
+        pts->newScreenW = 640;
+        pts->newScreenH = 720;
+        break;
     default:    // something wrong
         qFatal("Run_Command_WindowSizeAndPos switch error");
     }
 
     snSequence++;
-    if(snSequence > 4)
+    if(snSequence > 5)
         snSequence = 0;
 }
 
@@ -189,44 +196,49 @@ void Run_BlinkLEDs(const simToPlugin *stp,
     if ((stp->simMenuStatus & MenuEnable) != 0) {
         pts->newMenuStatus |= MenuLedGreen;
         int timeout;
-        if (rcvr->getArmed() == 0)
+        quint8 armed;
+        quint8 mode;
+        rcvr->getFlighStatus(armed, mode);
+        debugInfo.append(QString("armed: %1, mode: %2\n").arg(armed).arg(mode));
+
+        if (armed == 0)         // disarm
             timeout = 1000;
-        else if (rcvr->getArmed() == 1)
-            timeout = 33;
-        else if (rcvr->getArmed() == 2)
+        else if (armed == 1)    // arming
+            timeout = 40;
+        else if (armed == 2)    // armed
             timeout = 100;
-        else
+        else                    // unknown
             timeout = 2000;
         if (ledTimer.elapsed() > timeout) {
             ledTimer.restart();
             pts->newMenuStatus ^= MenuLedBlue;
         }
-        quint8 mode = rcvr->getMode();
-        if (mode == 4) {
+
+        if (mode == 6) {
             pts->newMenuStatus |= MenuFMode3;
             pts->newMenuStatus |= MenuFMode2;
             pts->newMenuStatus |= MenuFMode1;
-        } else if (mode == 4) {
+        } else if (mode == 5) {
             pts->newMenuStatus |= MenuFMode3;
             pts->newMenuStatus |= MenuFMode2;
             pts->newMenuStatus &= ~MenuFMode1;
+        } else if (mode == 4) {
+            pts->newMenuStatus |= MenuFMode3;
+            pts->newMenuStatus &= ~MenuFMode2;
+            pts->newMenuStatus |= MenuFMode1;
         } else if (mode == 3) {
             pts->newMenuStatus |= MenuFMode3;
             pts->newMenuStatus &= ~MenuFMode2;
-            pts->newMenuStatus |= MenuFMode1;
-        } else if (mode == 2) {
-            pts->newMenuStatus |= MenuFMode3;
-            pts->newMenuStatus &= ~MenuFMode2;
             pts->newMenuStatus &= ~MenuFMode1;
-        } else if (mode == 1) {
+        } else if (mode == 2) {
             pts->newMenuStatus &= ~MenuFMode3;
             pts->newMenuStatus |= MenuFMode2;
             pts->newMenuStatus &= ~MenuFMode1;
-        } else if (mode == 0) {
+        } else if (mode == 1) {
             pts->newMenuStatus &= ~MenuFMode3;
             pts->newMenuStatus &= ~MenuFMode2;
             pts->newMenuStatus |= MenuFMode1;
-        } else {
+        } else /*(mode == 0)*/ {
             pts->newMenuStatus &= ~MenuFMode3;
             pts->newMenuStatus &= ~MenuFMode2;
             pts->newMenuStatus &= ~MenuFMode1;

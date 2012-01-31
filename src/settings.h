@@ -24,7 +24,6 @@ public:
 
 private:
     QHash<QString, quint8> channels;
-
     QSettings *settings;
     QString sendToHost;
     quint16 sendToPort;
