@@ -21,6 +21,7 @@ public:
     QList<quint8> getOutputMap() { return outputMap; }
     bool isToRX() { return sendToRX; }
     bool isFromTX() { return takeFromTX; }
+    QList<quint16> getVideoModes() { return videoModes; }
 
 private:
     QHash<QString, quint8> channels;
@@ -33,6 +34,7 @@ private:
     QList<quint8> outputMap;
     bool sendToRX;
     bool takeFromTX;
+    QList<quint16> videoModes;
 };
 
 #endif // SETTINGS_H

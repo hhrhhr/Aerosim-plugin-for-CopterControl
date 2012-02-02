@@ -16,6 +16,7 @@ Settings::Settings(QString settingsPath, QObject *parent) :
        outputMap << 255;
    sendToRX = true;
    takeFromTX = true;
+   videoModes << 1 << 50 << 50 << 800 << 600;
 }
 
 void Settings::read()
@@ -53,4 +54,18 @@ void Settings::read()
 
     QString takeFrom = settings->value("Output/take_from", "TX").toString();
     takeFromTX = (takeFrom == "TX") ? true : false;
+
+    // video
+    quint8 resolutionNum = settings->value("Video/number_of_resolutions", 0).toInt();
+    if (resolutionNum > 0) {
+        videoModes.clear();
+        videoModes << resolutionNum;
+        for (quint8 i = 0; i < resolutionNum; ++i) {
+            num = QString::number(i+1);
+            QString modes = settings->value("Video/resolution_" + num, "0, 0, 640, 480").toString();
+            QString mode;
+            foreach (mode, modes.split(" "))
+                videoModes << mode.toInt();
+        }
+    }
 }
