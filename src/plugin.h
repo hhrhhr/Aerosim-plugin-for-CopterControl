@@ -3,6 +3,7 @@
 
 #include <QtCore>
 #include <QTime>
+#include <QList>
 #include "aerosimdatastruct.h"
 
 #define SIM_DLL_EXPORT extern "C" __declspec(dllexport)

@@ -9,6 +9,7 @@ QString debugInfo(DBG_BUFFER_MAX_SIZE, ' ');
 QString pluginFolder(MAX_PATH, ' ');
 QString outputFolder(MAX_PATH, ' ');
 
+QList<quint16> videoModes;
 QTime ledTimer;
 
 UdpSender *sndr;
@@ -71,6 +72,8 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
     Settings *ini = new Settings(pluginFolder);
     ini->read();
 
+    videoModes = ini->getVideoModes();
+
     sndr = new UdpSender(ini->getOutputMap(), ini->isFromTX());
     sndr->init(ini->remoteHost(), ini->remotePort());
 
@@ -98,58 +101,25 @@ void Run_Command_WindowSizeAndPos(const simToPlugin *stp,
                                         pluginToSim *pts)
 {
     static quint8 snSequence = 0;
-    // half size
-    qint16 width = stp->screenW / 2;
-    qint16 height = stp->screenH / 2;
+    quint8 idx = snSequence * 4;
 
-    switch(snSequence) {
-    case 0:     // top left
-        pts->newScreenX = 0;
-        pts->newScreenY = 0;
-        pts->newScreenW = width;
-        pts->newScreenH = height;
-        break;
-    case 1:     // top right
-        pts->newScreenX = width;
-        pts->newScreenY = 0;
-        pts->newScreenW = width;
-        pts->newScreenH = height;
-        break;
-    case 2:     // bottom right
-        pts->newScreenX = width;
-        pts->newScreenY = height;
-        pts->newScreenW = width;
-        pts->newScreenH = height;
-        break;
-    case 3:     // bottom left
-        pts->newScreenX = 0;
-        pts->newScreenY = height;
-        pts->newScreenW = width;
-        pts->newScreenH = height;
-        break;
-    case 4:     // fullscreen
+    if (snSequence >= videoModes.at(0)) {   // set fullscreen
         pts->newScreenX = 0;
         pts->newScreenY = 0;
         pts->newScreenW = stp->screenW;
         pts->newScreenH = stp->screenH;
-        break;
-    case 5:     // 640*720
-        pts->newScreenX = 50;
-        pts->newScreenY = 50;
-        pts->newScreenW = 640;
-        pts->newScreenH = 720;
-        break;
-    default:    // something wrong
-        qFatal("Run_Command_WindowSizeAndPos switch error");
-    }
-
-    snSequence++;
-    if(snSequence > 5)
         snSequence = 0;
+    } else {                                // set video mode from config
+        pts->newScreenX = videoModes.at(idx + 1);
+        pts->newScreenY = videoModes.at(idx + 2);
+        pts->newScreenW = videoModes.at(idx + 3);
+        pts->newScreenH = videoModes.at(idx + 4);
+        snSequence++;
+    }
 }
 
 void Run_Command_MoveToNextWaypoint(const simToPlugin *stp,
-                                    pluginToSim *pts)
+                                          pluginToSim *pts)
 {
     static quint8 snSequence = 0;
 
