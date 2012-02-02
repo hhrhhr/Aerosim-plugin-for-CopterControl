@@ -25,8 +25,8 @@ b) Copy QtCore4.dll, QtNetwork4.dll, libgcc_s_dw2-1.dll and mingwm10.dll from
         Configure plugin
 ---------------------------------------
 
-Not implemented yet.
-host - 127.0.0.1, send to port 40100, listen on port 40200
+See cc_plugin.ini
+You can change network settings, input and output channels map, video modes.
 
 ---------------------------------------
         Tools
