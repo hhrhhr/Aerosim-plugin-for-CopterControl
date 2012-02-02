@@ -87,12 +87,12 @@ struct simToPlugin
     float current;          // A
     float consumedCharge;   // Ah
     float capacity;         // Ah
-    float fuelConsumed;            // l
-    float fuelTankCapacity;        // l
+    float fuelConsumed;     // l
+    float fuelTankCapacity; // l
     // ver 3.83
     qint16 screenW;
     qint16 screenH;
-    // Model Orientation Matrix (??? X=Right, Y=Front, Z=Up ???)
+    // Model Orientation Matrix (X=Right, Y=Front, Z=Up)
     float axisXx;
     float axisXy;
     float axisXz;
