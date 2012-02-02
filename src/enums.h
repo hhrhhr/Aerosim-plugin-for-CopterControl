@@ -3,17 +3,17 @@
 
 // Custom Menu Item masks
 enum MenuMasks {
-    MenuCmdReset    = (1 << 0),
-    MenuEnable      = (1 << 1),
-    MenuTx          = (1 << 2),
-    MenuRx          = (1 << 3),
-    MenuLedBlue     = (1 << 4),
-    MenuLedGreen    = (1 << 5),
-    MenuFMode1      = (1 << 6),
-    MenuFMode2      = (1 << 7),
-    MenuFMode3      = (1 << 8),
-    MenuScreen      = (1 << 9),
-    MenuNextWpt     = (1 << 10)
+    MenuEnable      = (1 << 0),
+    MenuTx          = (1 << 1),
+    MenuRx          = (1 << 2),
+    MenuScreen      = (1 << 3),
+    MenuNextWpt     = (1 << 4),
+    MenuCmdReset    = (1 << 5),
+    MenuLedBlue     = (1 << 6),
+    MenuLedGreen    = (1 << 7),
+    MenuFMode1      = (1 << 8),
+    MenuFMode2      = (1 << 9),
+    MenuFMode3      = (1 << 10)
 };
 
 enum EOverrideFlags
