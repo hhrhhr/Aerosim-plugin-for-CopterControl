@@ -5,6 +5,8 @@
 #include <QUdpSocket>
 #include <QList>
 #include <QTime>
+#include <QMutex>
+#include <QMutexLocker>
 #include "aerosimdatastruct.h"
 
 class UdpSender : public QObject
@@ -39,13 +41,14 @@ public:
     void stop();
     // function getChannels for other threads
     void setChannels(pluginToSim *pts);
-    void getFlighStatus(quint8 &arm, quint8 &mod) { arm = armed; mod = mode; }
+    void getFlighStatus(quint8 &arm, quint8 &mod);
     quint8 getArmed() { return armed; }
     quint8 getMode() { return mode; }
     quint32 pcks() { return packetsRecived; }
 
 private:
     volatile bool stopped;
+    QMutex mutex;
     QUdpSocket *inSocket;
     QList<float> channels;
     QList<quint8> channelsMap;

@@ -34,12 +34,14 @@ void UdpSender::init(const QString &remoteHost, quint16 remotePort)
 void UdpSender::sendDatagram(const simToPlugin *stp)
 {
     QByteArray data;
-    data.resize(184);
+    data.resize(188);
     QDataStream out(&data, QIODevice::WriteOnly);
     out.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
     // magic header, "AERO"
     out << quint32(0x4153494D);
+    // simulation step
+    out << stp->simTimeStep;
     // home location
     out << stp->initPosX    << stp->initPosY    << stp->initPosZ;
     out << stp->wpHomeX     << stp->wpHomeY     << stp->wpHomeLat   << stp->wpHomeLong;
@@ -137,6 +139,8 @@ void UdpReciever::stop()
 
 void UdpReciever::setChannels(pluginToSim *pts)
 {
+    QMutexLocker locker(&mutex);
+
     for (int i = 0; i < 10; ++i) {
         quint8 mapTo = channelsMap.at(i);
         if (mapTo != 255) {
@@ -152,6 +156,14 @@ void UdpReciever::setChannels(pluginToSim *pts)
             }
         }
     }
+}
+
+void UdpReciever::getFlighStatus(quint8 &arm, quint8 &mod)
+{
+    QMutexLocker locker(&mutex);
+
+    arm = armed;
+    mod = mode;
 }
 
 // private

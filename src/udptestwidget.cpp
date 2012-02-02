@@ -125,8 +125,8 @@ void Widget::processDatagram(const QByteArray &data)
     quint32 magic;
     stream >> magic;
     if (magic == 0x4153494D) {  // "AERO"
-
-        float   homeX, homeY, homeZ,
+        float   timeStep,
+                homeX, homeY, homeZ,
                 WpHX, WpHY, WpLat, WpLon,
                 posX, posY, posZ,
                 velX, velY, velZ,
@@ -138,6 +138,7 @@ void Widget::processDatagram(const QByteArray &data)
                 rx, ry, rz, fx, fy, fz, ux, uy, uz,
                 chAil, chEle, chThr, chRud, chPlg1, chPlg2, chFpv1, chFpv2;
 
+        stream >> timeStep;
         stream >> homeX >> homeY >> homeZ;
         stream >> WpHX >> WpHY >> WpLat >> WpLon;
         stream >> posX >> posY >> posZ;
@@ -159,6 +160,9 @@ void Widget::processDatagram(const QByteArray &data)
 
         ui->listWidget->clear();
         /*
+        ui->listWidget->addItem("time step (s)");
+        ui->listWidget->addItem(QString("%1")
+                                .arg(timeStep);
         ui->listWidget->addItem("home location (m)");
         ui->listWidget->addItem(QString("%1, %2, %3")
                                 .arg(homeX, 7, 'f', 4)
@@ -220,7 +224,7 @@ void Widget::processDatagram(const QByteArray &data)
         QMatrix4x4 m = QMatrix4x4( fy,  fx, -fz,  0.0,
                                    ry,  rx, -rz,  0.0,
                                   -uy, -ux,  uz,  0.0,
-                                   0.0, 0.0, 0.0, 1.0);
+                                  0.0, 0.0, 0.0,  1.0);
         m.optimize();
 
         // world matrix
@@ -270,7 +274,6 @@ void Widget::processDatagram(const QByteArray &data)
         screenTimeout.restart();
 
     } else if (magic == 0x52434D44) { // "RCMD"
-
         qreal ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8, ch9, ch10;
         stream >> ch1 >> ch2 >> ch3 >> ch4 >> ch5 >> ch6 >> ch7 >> ch8 >> ch9 >> ch10;
         quint8 armed, mode;
