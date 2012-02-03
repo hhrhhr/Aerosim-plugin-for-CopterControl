@@ -27,6 +27,6 @@ SOURCES += \
     settings.cpp
 
 # output >>>>>>
-#DLLDESTDIR = ../CopterControl
-DLLDESTDIR = e:/sims/AeroSIM-RC/Plugin/CopterControl
+DLLDESTDIR = ../CopterControl
+#DLLDESTDIR = e:/sims/AeroSIM-RC/Plugin/CopterControl
 
