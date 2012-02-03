@@ -3,6 +3,7 @@
 #include "qdebughandler.h"
 #include "enums.h"
 #include "settings.h"
+#include "osdroutine.h"
 
 bool isFirstRun = true;
 QString debugInfo(DBG_BUFFER_MAX_SIZE, ' ');
@@ -11,9 +12,13 @@ QString outputFolder(MAX_PATH, ' ');
 
 QList<quint16> videoModes;
 QTime ledTimer;
+QTime osdTimer;
+quint16 osdRate;
+float osdScale;
 
 UdpSender *sndr;
 UdpReciever *rcvr;
+OSDRoutine *osd;
 
 const float RAD2DEG = 180.f / M_PI;
 const float DEG2RAD = M_PI / 180.f;
@@ -25,6 +30,7 @@ extern "C" int __stdcall DllMain(void*, quint32 fdwReason, void*)
     case 0:
 //        qDebug() << hinstDLL << "DLL_PROCESS_DETACH " << lpvReserved;
 // free resources here
+        delete osd;
         rcvr->stop();
         rcvr->wait(500);
         delete rcvr;
@@ -67,7 +73,7 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
     pluginFolder = p->strPluginFolder;
     outputFolder = p->strOutputFolder;
 
-    ledTimer.restart();
+    ledTimer.start();
 
     Settings *ini = new Settings(pluginFolder);
     ini->read();
@@ -79,9 +85,13 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
 
     rcvr = new UdpReciever(ini->getInputMap(), ini->isToRX());
     rcvr->init(ini->localHost(), ini->localPort());
-
-    // run thread
     rcvr->start();
+
+    quint16 width, height;
+    ini->getOSDSettings(width, height, osdRate, osdScale);
+    osd = new OSDRoutine(width, height);
+
+    osdTimer.start();
 
     delete ini;
 
@@ -90,11 +100,18 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
 
 //-----------------------------------------------------------------------------
 
-void Run_Command_Reset(/*const simToPlugin *stp,
-                               pluginToSim *pts*/)
+void Run_Command_OSDShow(const simToPlugin *stp,
+                               pluginToSim *pts)
 {
-    // Print some debug info, although it will only be seen during one frame
-    debugInfo.append("\nRESET");
+    pts->isOSDShow = true;
+    osd->refresh(stp, pts);
+
+    if (osdTimer.elapsed() > osdRate) {
+        osdTimer.restart();
+        pts->isOSDChanged = true;
+    }
+
+    pts->OSDScale = osdScale;
 }
 
 void Run_Command_WindowSizeAndPos(const simToPlugin *stp,
@@ -179,6 +196,7 @@ void Run_BlinkLEDs(const simToPlugin *stp,
             timeout = 100;
         else                    // unknown
             timeout = 2000;
+
         if (ledTimer.elapsed() > timeout) {
             ledTimer.restart();
             pts->newMenuStatus ^= MenuLedBlue;
@@ -330,16 +348,14 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
     // By default do not change the Menu Items of type CheckBox
     pts->newMenuStatus = stp->simMenuStatus;
     // Extract Menu Commands from Flags
-    bool isReset  = (stp->simMenuStatus & MenuCmdReset) != 0;
     bool isEnable = (stp->simMenuStatus & MenuEnable) != 0;
     bool isTxON   = (stp->simMenuStatus & MenuTx) != 0;
     bool isRxON   = (stp->simMenuStatus & MenuRx) != 0;
     bool isScreen = (stp->simMenuStatus & MenuScreen) != 0;
     bool isNextWp = (stp->simMenuStatus & MenuNextWpt) != 0;
+    bool isOSD    = (stp->simMenuStatus & MenuOSDShow) != 0;
     // Run commands
-    if (isReset) {
-        Run_Command_Reset(/*stp, pts*/);
-    } else if (isScreen) {
+    if (isScreen) {
         Run_Command_WindowSizeAndPos(stp, pts);
     } else if (isNextWp) {
         Run_Command_MoveToNextWaypoint(stp, pts);
@@ -359,6 +375,10 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
                          .arg(sndr->pcks() - rcvr->pcks() - 1)
                          );
     }
+
+    // OSD run after all
+    if (isOSD)
+        Run_Command_OSDShow(stp, pts);
 
     // debug info is shown on the screen
     InfoText(stp, pts);

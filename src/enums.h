@@ -8,7 +8,7 @@ enum MenuMasks {
     MenuRx          = (1 << 2),
     MenuScreen      = (1 << 3),
     MenuNextWpt     = (1 << 4),
-    MenuCmdReset    = (1 << 5),
+    MenuOSDShow     = (1 << 5),
     MenuLedBlue     = (1 << 6),
     MenuLedGreen    = (1 << 7),
     MenuFMode1      = (1 << 8),
