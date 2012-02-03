@@ -17,10 +17,16 @@ Settings::Settings(QString settingsPath, QObject *parent) :
    sendToRX = true;
    takeFromTX = true;
    videoModes << 1 << 50 << 50 << 800 << 600;
+   osdWidth = 512;
+   osdHeight = 512;
+   osdRate = 333;
 }
 
 void Settings::read()
 {
+    if (!settings)
+        qFatal("no settings found");
+
     // network
     listenOnHost = settings->value("listen_on_host", listenOnHost).toString();
     listenOnPort = settings->value("listen_on_port", listenOnPort).toInt();
@@ -68,4 +74,9 @@ void Settings::read()
                 videoModes << mode.toInt();
         }
     }
+
+    // OSD
+    osdWidth = settings->value("OSD/buffer_width", osdWidth).toInt();
+    osdHeight = settings->value("OSD/buffer_height", osdHeight).toInt();
+    osdWidth = settings->value("OSD/buffer_width", osdRate).toInt();
 }

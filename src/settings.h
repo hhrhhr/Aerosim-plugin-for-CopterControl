@@ -35,6 +35,9 @@ private:
     bool sendToRX;
     bool takeFromTX;
     QList<quint16> videoModes;
+    quint16 osdWidth;
+    quint16 osdHeight;
+    quint16 osdRate;
 };
 
 #endif // SETTINGS_H
