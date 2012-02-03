@@ -22,6 +22,13 @@ public:
     bool isToRX() { return sendToRX; }
     bool isFromTX() { return takeFromTX; }
     QList<quint16> getVideoModes() { return videoModes; }
+    void getOSDSettings (quint16 &width, quint16 &height, quint16 &rate, float &scale)
+    {
+        width = osdWidth;
+        height = osdHeight;
+        rate = osdRate;
+        scale = osdScale;
+    }
 
 private:
     QHash<QString, quint8> channels;
@@ -38,6 +45,7 @@ private:
     quint16 osdWidth;
     quint16 osdHeight;
     quint16 osdRate;
+    float osdScale;
 };
 
 #endif // SETTINGS_H

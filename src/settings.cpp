@@ -20,6 +20,7 @@ Settings::Settings(QString settingsPath, QObject *parent) :
    osdWidth = 512;
    osdHeight = 512;
    osdRate = 333;
+   osdScale = 0.9;
 }
 
 void Settings::read()
@@ -78,5 +79,6 @@ void Settings::read()
     // OSD
     osdWidth = settings->value("OSD/buffer_width", osdWidth).toInt();
     osdHeight = settings->value("OSD/buffer_height", osdHeight).toInt();
-    osdWidth = settings->value("OSD/buffer_width", osdRate).toInt();
+    osdRate = settings->value("OSD/refresh_rate", osdRate).toInt();
+    osdScale = settings->value("OSD/scale", osdScale).toFloat();
 }
