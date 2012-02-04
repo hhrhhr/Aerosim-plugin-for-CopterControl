@@ -24,11 +24,26 @@ void OSDRoutine::refresh(const simToPlugin *stp, pluginToSim *pts)
     /*
      * begin paint
     */
+    // rects
     for (int i = 0; i < 16; ++i) {
         p.setBrush(QColor(i*16, 0, 255-i*16, 255-i*16));
         p.drawRect(i*16, i*16, osdWidth/8, osdHeight/8);
     }
+
+    // image
     p.drawImage(QPoint(0, osdHeight - logo.height()), logo);
+
+    // text
+    p.setFont(QFont("Arial", 24));
+
+    p.setPen(Qt::green);
+    p.drawStaticText(0, 200, QStaticText("STATIC TEXT"));
+
+    p.setPen(Qt::yellow);
+    static int cnt = 0;
+    p.drawText(0, 250, "DINAMIC " + QString::number(cnt) + " TEXT");
+    ++cnt;
+
     /*
     * paint end
     */

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QPainter>
 #include <QImage>
+#include <QStaticText>
 #include "aerosimdatastruct.h"
 
 class OSDRoutine : public QObject

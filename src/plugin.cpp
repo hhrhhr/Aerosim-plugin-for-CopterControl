@@ -23,6 +23,8 @@ OSDRoutine *osd;
 const float RAD2DEG = 180.f / M_PI;
 const float DEG2RAD = M_PI / 180.f;
 
+QApplication *dll;
+
 //extern "C" int __stdcall DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 extern "C" int __stdcall DllMain(void*, quint32 fdwReason, void*)
 {
@@ -69,6 +71,9 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_ReportStructSizes(quint32 *sizeSimToPlugin,
 SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
 {
     qDebug() << "AeroSIMRC_Plugin_Init begin";
+
+    int argc = 1;
+    dll = new QApplication(argc, (char **)' ', false);
 
     pluginFolder = p->strPluginFolder;
     outputFolder = p->strOutputFolder;
