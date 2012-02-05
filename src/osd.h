@@ -5,6 +5,10 @@
 #include <QPainter>
 #include <QImage>
 #include <QStaticText>
+#include <QGraphicsScene>
+#include <QtSvg/QSvgRenderer>
+#include <QtSvg/QGraphicsSvgItem>
+
 #include "aerosimdatastruct.h"
 
 class OSD : public QObject
@@ -18,6 +22,10 @@ public:
 private:
     quint16 osdWidth;
     quint16 osdHeight;
+
+    QGraphicsScene *m_scene;
+    QSvgRenderer *m_renderer;
+    QGraphicsSvgItem *m_background;
 };
 
 #endif // OSD_H

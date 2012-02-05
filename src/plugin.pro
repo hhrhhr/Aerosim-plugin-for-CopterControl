@@ -1,6 +1,7 @@
 !win32 { error("sorry, only win32 supported") }
 
 QT += network
+QT += svg
 #QT -= gui
 TARGET = plugin_AeroSIMRC
 TEMPLATE = lib

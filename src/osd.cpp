@@ -5,6 +5,19 @@ OSD::OSD(quint16 width, quint16 height, QObject *parent)
 {
     osdWidth = width;
     osdHeight = height;
+
+    // create scene
+    m_scene = new QGraphicsScene(0, 0, osdWidth, osdHeight);
+    m_scene->clear();
+
+    m_renderer = new QSvgRenderer();
+    m_renderer->load(QString(":/osd_scene.svg"));
+
+    m_background = new QGraphicsSvgItem();
+    m_background->setSharedRenderer(m_renderer);
+    m_background->setElementId(QString("background"));
+
+    m_scene->addItem(m_background);
 }
 
 OSD::~OSD()
@@ -43,6 +56,9 @@ void OSD::refresh(const simToPlugin *stp, pluginToSim *pts)
     static int cnt = 0;
     p.drawText(0, 250, "DINAMIC " + QString::number(cnt) + " TEXT");
     ++cnt;
+
+    // scene
+    m_scene->render(&p);
 
     /*
     * paint end
