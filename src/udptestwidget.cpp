@@ -309,6 +309,8 @@ void Widget::sendDatagram()
         return;
 
     float ch[10];   // = {0,0,0,0,0,0,0,0,0,0};
+    quint8 armed;
+    quint8 fmode;
     const float coeff = 1.0 / 512.0;
 
     ch[0] = ui->ch1->value() * coeff;
@@ -322,6 +324,8 @@ void Widget::sendDatagram()
     ch[8] = ui->ch9->value() * coeff;
     ch[9] = ui->ch10->value() * coeff;
 
+    armed = (ui->disarmed->isChecked()) ? 0 : (ui->arming->isChecked()) ? 1 : 2;
+    fmode = ui->flightMode->value();
 
     QByteArray data;
     // 50 - current size of values, 4(quint32) + 10*4(float) + 2*1(quint8) + 4(quint32)
@@ -336,7 +340,7 @@ void Widget::sendDatagram()
         stream << ch[i];
     }
     // send armed and mode
-    stream << quint8(2) << quint8(0);
+    stream << armed << fmode;
     // send readed counter
     stream << packetCounter;
 
