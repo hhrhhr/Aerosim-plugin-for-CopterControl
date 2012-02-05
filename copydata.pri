@@ -13,8 +13,14 @@ FILES = \
 
     FILES_WIN = $${FILES}
     FILES_WIN ~= s,/,\\,g
-    DEST_DIR_WIN = $${OUT_PWD}/$${CC_DIR}/
+    DEST_DIR_WIN = $${OUT_PWD}/$${CC_DIR}
     DEST_DIR_WIN ~= s,/,\\,g
+
+    copydata.commands += -$(MKDIR) $${DEST_DIR_WIN} $$escape_expand(\\n\\t)
+
     for(file, FILES_WIN) {
-        system(xcopy /y $${file} $${DEST_DIR_WIN})
+        copydata.commands += $(COPY_FILE) $${file} "$${DEST_DIR_WIN}" $$escape_expand(\\n\\t)
     }
+
+    copydata.target = FORCE
+    QMAKE_EXTRA_TARGETS += copydata
