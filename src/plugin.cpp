@@ -3,7 +3,7 @@
 #include "qdebughandler.h"
 #include "enums.h"
 #include "settings.h"
-#include "osdroutine.h"
+#include "osd.h"
 
 bool isFirstRun = true;
 QString debugInfo(DBG_BUFFER_MAX_SIZE, ' ');
@@ -18,7 +18,7 @@ float osdScale;
 
 UdpSender *sndr;
 UdpReciever *rcvr;
-OSDRoutine *osd;
+OSD *osd;
 
 const float RAD2DEG = 180.f / M_PI;
 const float DEG2RAD = M_PI / 180.f;
@@ -94,7 +94,7 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
 
     quint16 width, height;
     ini->getOSDSettings(width, height, osdRate, osdScale);
-    osd = new OSDRoutine(width, height);
+    osd = new OSD(width, height);
 
     osdTimer.start();
 

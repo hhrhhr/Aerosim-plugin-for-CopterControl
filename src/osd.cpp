@@ -1,18 +1,18 @@
-#include "osdroutine.h"
+#include "osd.h"
 
-OSDRoutine::OSDRoutine(quint16 width, quint16 height, QObject *parent)
+OSD::OSD(quint16 width, quint16 height, QObject *parent)
     : QObject(parent)
 {
     osdWidth = width;
     osdHeight = height;
 }
 
-OSDRoutine::~OSDRoutine()
+OSD::~OSD()
 {
 
 }
 
-void OSDRoutine::refresh(const simToPlugin *stp, pluginToSim *pts)
+void OSD::refresh(const simToPlugin *stp, pluginToSim *pts)
 {
     QImage img(stp->OSDVideoBuf, osdWidth, osdHeight, QImage::Format_ARGB32_Premultiplied);
     img.fill(Qt::transparent);

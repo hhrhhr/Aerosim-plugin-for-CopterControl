@@ -19,14 +19,14 @@ HEADERS += \
     qdebughandler.h \
     udpconnect.h \
     settings.h \
-    osdroutine.h
+    osd.h
 
 SOURCES += \
     qdebughandler.cpp \
     plugin.cpp \
     udpconnect.cpp \
     settings.cpp \
-    osdroutine.cpp
+    osd.cpp
 
 # output >>>>>>
 DLLDESTDIR = ../CopterControl

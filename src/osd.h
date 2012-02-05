@@ -1,5 +1,5 @@
-#ifndef OSDROUTINE_H
-#define OSDROUTINE_H
+#ifndef OSD_H
+#define OSD_H
 
 #include <QObject>
 #include <QPainter>
@@ -7,11 +7,11 @@
 #include <QStaticText>
 #include "aerosimdatastruct.h"
 
-class OSDRoutine : public QObject
+class OSD : public QObject
 {
 public:
-    explicit OSDRoutine(quint16 width, quint16 height, QObject *parent = 0);
-    ~OSDRoutine();
+    explicit OSD(quint16 width, quint16 height, QObject *parent = 0);
+    ~OSD();
 
     void refresh(const simToPlugin *stp, pluginToSim *pts);
 
@@ -20,4 +20,4 @@ private:
     quint16 osdHeight;
 };
 
-#endif // OSDROUTINE_H
+#endif // OSD_H
