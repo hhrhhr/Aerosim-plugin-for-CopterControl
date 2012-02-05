@@ -6,7 +6,9 @@ CC_DIR = CopterControl
 FILES = \
     $${RES_DIR}/cc_off.tga \
     $${RES_DIR}/cc_on.tga \
-    $${RES_DIR}/cc_plugin.ini \
+    $${RES_DIR}/cc_off_hover.tga \
+    $${RES_DIR}/cc_on.tga \
+    $${RES_DIR}/cc_plugin_hover.ini \
     $${RES_DIR}/plugin.txt
 
     FILES_WIN = $${FILES}
