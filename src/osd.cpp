@@ -34,9 +34,7 @@ void OSD::refresh(const simToPlugin *stp, pluginToSim *pts)
 
     QPainter p;
     p.begin(&img);
-    /*
-     * begin paint
-    */
+
     // rects
     for (int i = 0; i < 16; ++i) {
         p.setBrush(QColor(i*16, 0, 255-i*16, 255-i*16));
@@ -60,12 +58,9 @@ void OSD::refresh(const simToPlugin *stp, pluginToSim *pts)
     // scene
     m_scene->render(&p);
 
-    /*
-    * paint end
-    */
     p.end();
 
-    // swap R and B componetns
+    // swap R and B components
     for (int i = 0; i < osdWidth*osdHeight; ++i) {
         qSwap(stp->OSDVideoBuf[i * 4 + 0], stp->OSDVideoBuf[i * 4 + 2]);
     }
