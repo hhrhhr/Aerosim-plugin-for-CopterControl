@@ -22,5 +22,8 @@ FILES = \
         copydata.commands += $(COPY_FILE) $${file} "$${DEST_DIR_WIN}" $$escape_expand(\\n\\t)
     }
 
+    # Edit copydata.cmd and use this to copy plugin files to the plugin directory
+    copydata.commands += -cmd /c copydata.cmd $$escape_expand(\\n\\t)
+
     copydata.target = FORCE
     QMAKE_EXTRA_TARGETS += copydata
