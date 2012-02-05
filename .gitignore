@@ -1,4 +1,14 @@
 *.user
 *.tmp
 tmp/
-
+/CopterControl
+Makefile
+Makefile.*
+*.a
+*.o
+*.dll
+*.lib
+*.exe
+/src/[Rr]elease
+/src/[Dd]ebug
+/src/ui_*.h
