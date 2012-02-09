@@ -49,7 +49,7 @@ void OSD::refresh(const simToPlugin *stp, pluginToSim *pts)
     */
     p.end();
 
-    // swap R and B componetns
+    // swap R and B components
     for (int i = 0; i < osdWidth*osdHeight; ++i) {
         qSwap(stp->OSDVideoBuf[i * 4 + 0], stp->OSDVideoBuf[i * 4 + 2]);
     }
