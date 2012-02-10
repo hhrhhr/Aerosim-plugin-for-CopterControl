@@ -11,4 +11,6 @@ OTHER_FILES += \
     share/plugin.txt \
     share/cc_plugin.ini \
     share/cc_on.tga \
-    share/cc_off.tga
+    share/cc_off.tga \
+    share/cc_on_hover.tga \
+    share/cc_off_hover.tga
