@@ -352,7 +352,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="">
+        <widget class="QGroupBox" name="groupBox_4">
          <property name="title">
           <string>Channels</string>
          </property>
