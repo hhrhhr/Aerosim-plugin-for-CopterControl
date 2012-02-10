@@ -4,7 +4,7 @@ RES_DIR = $${PWD}/share
 CC_DIR = CopterControl
 
 #uncomment this line to copy plugin files to the plugin directory
-SIM_DIR = e:\\sims\\AeroSIM-RC
+#SIM_DIR = e:\\sims\\AeroSIM-RC
 
 FILES = \
     $${RES_DIR}/cc_off.tga \
