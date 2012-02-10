@@ -1,7 +1,7 @@
 TEMPLATE = subdirs
 
-#uncomment bottom line to copy plugin files to the simulator directory
-SIM_DIR = e:\\sims\\AeroSIM-RC
+#uncomment next line to copy plugin files to the simulator directory
+#SIM_DIR = e:\\sims\\AeroSIM-RC
 RES_DIR = $${PWD}/share
 CC_DIR = CopterControl
 
@@ -18,7 +18,7 @@ FILES_WIN ~= s,/,\\,g
 DEST_DIR_WIN = $${OUT_PWD}/$${CC_DIR}
 DEST_DIR_WIN ~= s,/,\\,g
 
-#used QMAKE_COPY_DIR
+#used QMAKE_COPY_DIR (xcopy) instead QMAKE_COPY_FILES (copy)
 for(file, FILES_WIN) {
     copydata.commands += $(COPY_DIR) $${file} $${DEST_DIR_WIN}\\ $$escape_expand(\\n\\t)
 }
