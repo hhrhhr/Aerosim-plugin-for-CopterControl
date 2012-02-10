@@ -15,8 +15,8 @@ QTime ledTimer;
 UdpSender *sndr;
 UdpReciever *rcvr;
 
-const float RAD2DEG = 180.f / M_PI;
-const float DEG2RAD = M_PI / 180.f;
+const float RAD2DEG = (float)(180.0 / M_PI);
+const float DEG2RAD = (float)(M_PI / 180.0);
 
 //extern "C" int __stdcall DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 extern "C" int __stdcall DllMain(void*, quint32 fdwReason, void*)

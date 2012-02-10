@@ -1,21 +1,26 @@
 #ifndef WIDGET_H
 #define WIDGET_H
 
+
 #include <QWidget>
 #include <QUdpSocket>
 #include <QTime>
+#if defined(Q_CC_MSVC)
+#define _USE_MATH_DEFINES
+#endif
 #include <qmath.h>
 #include <QVector3D>
 #include <QMatrix4x4>
 #include <QDebug>
 #include <QTimer>
 
+
 namespace Ui {
 class Widget;
 }
 
-const float RAD2DEG = (180.0/M_PI);
-const float DEG2RAD = (M_PI/180.0);
+const float RAD2DEG = (float)(180.0/M_PI);
+const float DEG2RAD = (float)(M_PI/180.0);
 
 class Widget : public QWidget
 {
