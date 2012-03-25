@@ -112,8 +112,11 @@ struct simToPlugin
     float accelXm;  // m/s/s Model acceleration in body coordinates
     float accelYm;
     float accelZm;
+    // ver 3.90
+    quint32 OSDVideoBufSize
 } PACK_STRUCT ;     // normal - 592, packed - 582 OK (3.81)
                     // normal - ???, packed - 658 OK (3.83)
+                    // normal - ???, packed - ??? OK (3.90)
 
 struct pluginToSim
 {
