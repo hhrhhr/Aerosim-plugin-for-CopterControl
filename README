@@ -17,13 +17,9 @@ b) run:
         Installing
 ---------------------------------------
 
-1a) Copy folder "CopterControl" from build location to simulator's "Plugin" folder.
-1b) Copy QtCore4.dll, QtNetwork4.dll, libgcc_s_dw2-1.dll and mingwm10.dll from
-    Qt library location to the root folder of simulator.
-  or
-2) Uncomment 4-th line in copydata.pri and set the variable SIM_DIR to point 
-   to the root of the simulator. Then after compiling all the libraries and plug-in
-   will be copied automatically
+1) Copy folder "CopterControl" from build location to simulator's "Plugin" folder.
+2) Copy QtCore4.dll, QtNetwork4.dll, libgcc_s_dw2-1.dll and mingwm10.dll from
+   Qt library location to the root folder of simulator.
 
 ---------------------------------------
         Configure plugin
