@@ -1,5 +1,5 @@
 TEMPLATE  = subdirs
-CONFIG   += warn_on #ordered
+CONFIG   += warn_on ordered
 
 SUBDIRS += plugin tools copydata
 

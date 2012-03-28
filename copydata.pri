@@ -30,9 +30,8 @@ for(file, FILES_WIN) {
     copydata.commands += $(COPY_DIR) $${DEST_DIR_WIN} \
                          $${SIM_DIR_WIN}\\Plugin\\$${CC_DIR}\\ $$escape_expand(\\n\\t)
 
-    QTLIBS = \
-        $$[QT_INSTALL_BINS]/QtCore4.dll \
-        $$[QT_INSTALL_BINS]/QtNetwork4.dll
+    QTLIBS =  $$[QT_INSTALL_BINS]/QtCore4.dll
+    QTLIBS += $$[QT_INSTALL_BINS]/QtNetwork4.dll
     win32-g++{
         QTLIBS += $$[QT_INSTALL_BINS]/libgcc_s_dw2-1.dll
         QTLIBS += $$[QT_INSTALL_BINS]/mingwm10.dll
@@ -45,10 +44,9 @@ for(file, FILES_WIN) {
         copydata.commands += $(COPY_DIR) $${qtlibs} $${SIM_DIR_WIN}\\ $$escape_expand(\\n\\t)
     }
 
-    copydata.commands += pushd $${SIM_DIR_WIN} && attrib -a -r -s -h -i /s /d && popd
+    ## fix for 'invisible' plugins directory, fixed in 3.90
+    # copydata.commands += pushd $${SIM_DIR_WIN} && attrib -a -r -s -h -i /s /d && popd
 }
-
-message($$copydata.commands)
 
 copydata.target = FORCE
 QMAKE_EXTRA_TARGETS += copydata

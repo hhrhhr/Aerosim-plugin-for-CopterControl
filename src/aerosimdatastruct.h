@@ -113,10 +113,10 @@ struct simToPlugin
     float accelYm;
     float accelZm;
     // ver 3.90
-    quint32 OSDVideoBufSize
+    quint32 OSDVideoBufSize;
 } PACK_STRUCT ;     // normal - 592, packed - 582 OK (3.81)
                     // normal - ???, packed - 658 OK (3.83)
-                    // normal - ???, packed - ??? OK (3.90)
+                    // normal - ???, packed - 662 OK (3.90)
 
 struct pluginToSim
 {
@@ -163,7 +163,7 @@ struct pluginToSim
     qint16 newScreenX;
     qint16 newScreenY;
 } PACK_STRUCT ;     // normal 516, packed 507 OK (3.81)
-                    // normal ???, packed 515 OK (3.83)
+                    // normal ???, packed 515 OK (3.83 & 3.90)
 
 struct TPluginMenuItem
 {
@@ -178,7 +178,7 @@ struct pluginInit
     TPluginMenuItem OBSOLETE_atMenuItem[MAX_DLL_USER_MENU_ITEMS];
     const char *strPluginFolder;
     const char *strOutputFolder;
-} PACK_STRUCT ;     // normal - 144, packed - 144 OK (3.81 & 3.83)
+} PACK_STRUCT ;     // normal - 144, packed - 144 OK (3.81 & 3.83 & 3.90)
 
 #ifdef Q_CC_MSVC
 #pragma pack (pop, r1)

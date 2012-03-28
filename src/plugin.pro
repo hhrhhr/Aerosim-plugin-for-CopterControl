@@ -29,4 +29,3 @@ SOURCES += \
 # output >>>>>>
 DLLDESTDIR = ../CopterControl
 #DLLDESTDIR = e:/sims/AeroSIM-RC/Plugin/CopterControl
-
