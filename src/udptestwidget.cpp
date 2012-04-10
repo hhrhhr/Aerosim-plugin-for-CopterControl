@@ -238,6 +238,18 @@ void Widget::processDatagram(const QByteArray &data)
         QVector3D rpy;
         asMatrix2RPY(m, rpy);
 
+        // sonar
+        float sAlt = 5.0;
+        if ((alt < (sAlt * 2.0)) && (roll < 0.35) && (pitch < 0.35)) {
+            float x = alt * qTan(roll);
+            float y = alt * qTan(pitch);
+            float h = QVector3D(x, y, alt).length();
+            sAlt = qMin(h, sAlt);
+        }
+
+        ui->listWidget->addItem("sonar altitude");
+        ui->listWidget->addItem(QString("%1")
+                                .arg(sAlt, 8, 'f', 5));
         ui->listWidget->addItem("vectors");
         ui->listWidget->addItem(QString("       X       Y       Z"));
         ui->listWidget->addItem(QString("R: %1 %2 %3\nF: %4 %5 %6\nU: %7 %8 %9")
