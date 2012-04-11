@@ -31,7 +31,12 @@ for(file, FILES_WIN) {
                          $${SIM_DIR_WIN}\\Plugin\\$${CC_DIR}\\ $$escape_expand(\\n\\t)
 
     QTLIBS =  $$[QT_INSTALL_BINS]/QtCore4.dll
-    QTLIBS += $$[QT_INSTALL_BINS]/QtNetwork4.dll
+    contains( QT, network ) {
+        QTLIBS += $$[QT_INSTALL_BINS]/QtNetwork4.dll
+    }
+    contains( QT, gui) {
+        QTLIBS += $$[QT_INSTALL_BINS]/QtGui4.dll
+    }
     win32-g++{
         QTLIBS += $$[QT_INSTALL_BINS]/libgcc_s_dw2-1.dll
         QTLIBS += $$[QT_INSTALL_BINS]/mingwm10.dll
