@@ -2,6 +2,7 @@
 #define _plugin_h_
 
 #include <QtCore>
+#include <QApplication>
 #include <QTime>
 #include <QList>
 #include "aerosimdatastruct.h"

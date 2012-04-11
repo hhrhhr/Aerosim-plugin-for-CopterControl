@@ -3,6 +3,7 @@
 #include "qdebughandler.h"
 #include "enums.h"
 #include "settings.h"
+#include "configgui.h"
 
 bool isFirstRun = true;
 QString debugInfo(DBG_BUFFER_MAX_SIZE, ' ');
@@ -14,9 +15,13 @@ QTime ledTimer;
 
 UdpSender *sndr;
 UdpReciever *rcvr;
+QApplication *dll;
+ConfigGUI *gui;
 
 const float RAD2DEG = (float)(180.0 / M_PI);
 const float DEG2RAD = (float)(M_PI / 180.0);
+
+//-----------------------------------------------------------------------------
 
 //extern "C" int __stdcall DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 extern "C" int __stdcall DllMain(void*, quint32 fdwReason, void*)
@@ -64,26 +69,29 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Init(pluginInit *p)
 {
     qDebug() << "AeroSIMRC_Plugin_Init begin";
 
+    int argc = 1;
+    dll = new QApplication(argc, (char **)' ', true);
+    gui = NULL;
+
     pluginFolder = p->strPluginFolder;
     outputFolder = p->strOutputFolder;
 
     ledTimer.restart();
 
-    Settings *ini = new Settings(pluginFolder);
-    ini->read();
+    Settings ini(pluginFolder);
+    ini.read();
 
-    videoModes = ini->getVideoModes();
+    videoModes = ini.getVideoModes();
 
-    sndr = new UdpSender(ini->getOutputMap(), ini->isFromTX());
-    sndr->init(ini->remoteHost(), ini->remotePort());
+    sndr = new UdpSender(ini.getOutputMap(), ini.isFromTX());
+    sndr->init(ini.remoteHost(), ini.remotePort());
 
-    rcvr = new UdpReciever(ini->getInputMap(), ini->isToRX());
-    rcvr->init(ini->localHost(), ini->localPort());
+    rcvr = new UdpReciever(ini.getInputMap(), ini.isToRX());
+    rcvr->init(ini.localHost(), ini.localPort());
 
     // run thread
     rcvr->start();
 
-    delete ini;
 
     qDebug() << "AeroSIMRC_Plugin_Init done";
 }
@@ -96,6 +104,33 @@ void Run_Command_Reset(/*const simToPlugin *stp,
     // Print some debug info, although it will only be seen during one frame
     debugInfo.append("\nRESET");
 }
+
+//-----------------------------------------------------------------------------
+
+void Run_Command_ShowUI(bool enable,
+                        const simToPlugin *stp,
+                              pluginToSim *pts)
+{
+    static bool running = false;
+    if (enable && !gui && !running) {           // step 1, resize window
+        pts->newScreenX = videoModes.at(1);
+        pts->newScreenY = videoModes.at(2);
+        pts->newScreenW = videoModes.at(3);
+        pts->newScreenH = videoModes.at(4);
+        gui = new ConfigGUI(pluginFolder);
+    } else if (gui && !running) {               // step 2, show windget
+        gui->show();
+        gui->raise();
+        gui->activateWindow();
+        running = true;
+    } else if (running && !gui->isVisible()) {  // step 3, clear
+        delete gui;
+        gui = NULL;
+        running = false;
+    }
+}
+
+//-----------------------------------------------------------------------------
 
 void Run_Command_WindowSizeAndPos(const simToPlugin *stp,
                                         pluginToSim *pts)
@@ -117,6 +152,8 @@ void Run_Command_WindowSizeAndPos(const simToPlugin *stp,
         snSequence++;
     }
 }
+
+//-----------------------------------------------------------------------------
 
 void Run_Command_MoveToNextWaypoint(const simToPlugin *stp,
                                           pluginToSim *pts)
@@ -159,6 +196,8 @@ void Run_Command_MoveToNextWaypoint(const simToPlugin *stp,
     if(snSequence > 4)
         snSequence = 0;
 }
+
+//-----------------------------------------------------------------------------
 
 void Run_BlinkLEDs(const simToPlugin *stp,
                          pluginToSim *pts)
@@ -217,6 +256,8 @@ void Run_BlinkLEDs(const simToPlugin *stp,
         pts->newMenuStatus = 0;
     }
 }
+
+//-----------------------------------------------------------------------------
 
 void InfoText(const simToPlugin *stp,
                     pluginToSim *pts)
@@ -336,6 +377,7 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
     bool isRxON   = (stp->simMenuStatus & MenuRx) != 0;
     bool isScreen = (stp->simMenuStatus & MenuScreen) != 0;
     bool isNextWp = (stp->simMenuStatus & MenuNextWpt) != 0;
+    bool isShowUI = (stp->simMenuStatus & MenuShowUI) != 0;
     // Run commands
     if (isReset) {
         Run_Command_Reset(/*stp, pts*/);
@@ -343,8 +385,13 @@ SIM_DLL_EXPORT void AeroSIMRC_Plugin_Run(const simToPlugin *stp,
         Run_Command_WindowSizeAndPos(stp, pts);
     } else if (isNextWp) {
         Run_Command_MoveToNextWaypoint(stp, pts);
+//    } else if (isShowUI) {
+//        Run_Command_ShowUI(/*stp, pts*/);
     } else {
         Run_BlinkLEDs(stp, pts);
+
+        Run_Command_ShowUI(isShowUI, stp, pts);
+
         if (isEnable) {
             if (isTxON)
                 sndr->sendDatagram(stp);
